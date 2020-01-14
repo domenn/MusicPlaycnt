@@ -1,0 +1,16 @@
+BasedOnStyle: Google
+
+#AccessModifierOffset: -2
+#AllowShortIfStatementsOnASingleLine: Never
+ColumnLimit: 120
+#IndentCaseLabels: false
+#SortIncludes: false
+#ConstructorInitializerAllOnOneLineOrOnePerLine: true
+#AlwaysBreakTemplateDeclarations: Yes
+#UseTab: Never
+BinPackArguments: false
+# Cpp11BracedListStyle: false
+BinPackParameters: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+#AllowShortCaseLabelsOnASingleLine: false
+#AllowShortFunctionsOnASingleLine: Inline
