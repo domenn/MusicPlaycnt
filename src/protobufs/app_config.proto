@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package msw_proto_cfg;
+
+message PlaycntConfig {
+  string LibraryPath = 1;
+}

@@ -73,3 +73,7 @@ fabric.properties
 vs_proj/
 ext/
 
+/src/protobufs/songs.pb.cc
+/src/protobufs/songs.pb.h
+/src/protobufs/app_config.pb.cc
+/src/protobufs/app_config.pb.h
