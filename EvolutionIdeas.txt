@@ -1,0 +1,3 @@
+We could have at least 2 ways of operation
+* listener to file changes (foobar2000 comp.)
+* commandline app (Designed for audacious, where we set song-change action as executable run)

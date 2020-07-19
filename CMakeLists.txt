@@ -4,17 +4,25 @@ project(musicPlaycnt)
 set(CMAKE_CXX_STANDARD 17)
 include_directories(${CMAKE_SOURCE_DIR})
 
+file(GLOB_RECURSE _source_list *.cc* *.h* *.hpp*)
+foreach(_source IN ITEMS ${_source_list})
+  get_filename_component(_source_path "${_source}" PATH)
+  string(REPLACE "${CMAKE_SOURCE_DIR}" "" _group_path "${_source_path}")
+  string(REPLACE "/" "\\" _group_path "${_group_path}")
+  source_group("${_group_path}" FILES "${_source}")
+endforeach()
+
 add_executable(musicPlaycnt
     src/main.cpp
 #    src/misc/spdlog_colorful_sink_factory_singleton.cc
 #    src/misc/spdlog_colorful_sink_factory_singleton.hpp
     src/misc/spd_logging.cc src/misc/spd_logging.hpp
     src/ostream_logging.cc src/ostream_logging.hpp src/model/song.cc src/model/song.hpp src/misc/protobuf_read_write_disk.cc src/misc/protobuf_read_write_disk.hpp
-    src/win/encoding.cc src/win/encoding.hpp)
+    src/win/encoding.cc src/win/encoding.hpp src/misc/custom_include_spdlog.hpp src/model/song_list.cc src/model/song_list.hpp src/model/serializable.cc src/model/serializable.hpp)
 
 # find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
-find_package(protobuf REQUIRED)
+find_package(Protobuf REQUIRED)
 
 
 if (COMMAND protobuf_generate)

@@ -61,6 +61,7 @@
 //}
 
 #include <src/model/song.hpp>
+#include <src/model/song_list.hpp>
 
 #include "misc/spd_logging.hpp"
 #include "ostream_logging.hpp"
@@ -74,11 +75,13 @@ int main(int argc, char** argv) {
                          .log_to_file(true));
 
   msw::model::Song::testing_create_restore();
+  msw::model::SongList::example_songlists();
 
   SPDLOG_WARN("one {}", 33);
   SPDLOG_WARN("another ... haha");
   SPDLOG_OSR_DEBUG("lol ..." << 33 << " " << 5.551 << ' ' << std::endl << "NEWLINE!!!!!!!");
-  SPDLOG_OSR_WARN("A ... warning.RLY" << "lol ..." << 33 << " " << 5.551 << ' ' << "NEWLINE!!!!!!!");
+  SPDLOG_OSR_WARN("A ... warning.RLY"
+                  << "lol ..." << 33 << " " << 5.551 << ' ' << "NEWLINE!!!!!!!");
 
   return 0;
 }

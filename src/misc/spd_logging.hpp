@@ -1,6 +1,7 @@
 #pragma once
 
-#include <spdlog/spdlog.h>
+
+#include "custom_include_spdlog.hpp"
 #include <memory>
 
 namespace spdl {

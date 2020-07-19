@@ -1,12 +1,12 @@
 #include "spd_logging.hpp"
 
-#include <spdlog/sinks/msvc_sink.h>
+#include <src/misc/custom_include_spdlog.hpp>
 
 #include <map>
 #include <memory>
 #include <vector>
 
-#include "spdlog_colorful_sink_factory_singleton.hpp"
+// #include "spdlog_colorful_sink_factory_singleton.hpp"
 
 spdlog::filename_t log_filename{};
 bool log_to_file{true};
@@ -40,6 +40,7 @@ std::shared_ptr<spdlog::logger> spdl::make_new_logger(const char *name) {
 #ifdef _WIN32
 #ifndef NDEBUG
   sinks.emplace_back(std::make_shared<spdlog::sinks::msvc_sink_mt>());
+  spdlog::sinks::msvc_sink_mt *vs_sink = static_cast<spdlog::sinks::msvc_sink_mt*>(sinks.back().get());
 #endif
 #endif
   // sinks.emplace_back(internal::ColorfulSinkFactorySingleton::make_colorful_stdout());
@@ -58,6 +59,7 @@ std::shared_ptr<spdlog::logger> spdl::make_new_logger(const char *name) {
   shartedptr_lg->set_level(my_level);
 
   shartedptr_lg->set_pattern(log_pattern);
+  vs_sink->set_pattern("%g(%#): " + log_pattern);
   if (potential_exception) {
     SPDLOG_LOGGER_WARN(shartedptr_lg,
                        "Problem with opening file. Logging to file is probably not possible. Exception was: {}",

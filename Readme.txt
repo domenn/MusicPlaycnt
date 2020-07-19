@@ -16,6 +16,10 @@ UPDATE: I have written a workaround for this.
 
 
 "C:\Program Files\CMake\bin\cmake.exe" -DVCPKG_TARGET_TRIPLET=x64-windows-static-md -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake ..
+(IN GIT BASH) 'C:\Program Files\CMake\bin\cmake.exe' -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE='C:\vcpkg\scripts\buildsystems\vcpkg.cmake' ..
 
 To compile externals (might not always be needed):
 From CMD (maybe other shells also work): <whatever>\musicPlaycntPLOG\scripts>run_sh_vcvarsall.bat libs\install_platformdirs.sh
+
+alternative (VS generate):
+"C:\Program Files\CMake\bin\cmake.exe" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake ..

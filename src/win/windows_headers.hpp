@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef _WIN32
+
 #define DIAG__HIDDEN_PRINT_XSTR(x) DIAG__HIDDEN_PRINT_STR(x)
 #define DIAG__HIDDEN_PRINT_STR(x) #x
 
@@ -36,3 +38,4 @@
 
 #include <Windows.h>
 
+#endif
