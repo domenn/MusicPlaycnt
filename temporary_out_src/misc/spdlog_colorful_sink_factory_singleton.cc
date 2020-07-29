@@ -96,7 +96,7 @@ spdlog::sink_ptr AnsiWindowsColorSinkFactory::get_sink() {
 
 spdlog::sink_ptr spdl::internal::ColorfulSinkFactorySingleton::make_colorful_stdout() {
 #ifdef _WIN32
-  // return inst()->get_sink();
+   return inst()->get_sink();
 #else
   auto c_sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
   c_sink->set_color(spdlog::level::info, AnsiColor::LIGHT_GRAY);

@@ -4,4 +4,5 @@ package msw_proto_cfg;
 
 message PlaycntConfig {
   string LibraryPath = 1;
+  string FileToListen = 2;
 }

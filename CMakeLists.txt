@@ -17,7 +17,7 @@ if (WIN32)
   
   add_definitions(-DUNICODE -D_UNICODE)
   if (MSVC)
-    set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE INTERNAL "Debug and release configurations" FORCE )
+    set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE INTERNAL "Debug and release configurations" FORCE)
     add_definitions(/MP)
     get_directory_property(OUT_CO_TOP COMPILE_OPTIONS)
     if (NOT "/utf-8" IN_LIST OUT_CO_TOP)
@@ -34,17 +34,14 @@ foreach (_source IN ITEMS ${_source_list})
   source_group("${_group_path}" FILES "${_source}")
 endforeach ()
 
-add_executable(musicPlaycnt
-    src/main.cc
-    #    src/misc/spdlog_colorful_sink_factory_singleton.cc
-    #    src/misc/spdlog_colorful_sink_factory_singleton.hpp
-    src/misc/spd_logging.cc src/misc/spd_logging.hpp
-    src/ostream_logging.cc src/ostream_logging.hpp src/model/song.cc src/model/song.hpp src/misc/protobuf_read_write_disk.cc src/misc/protobuf_read_write_disk.hpp
-    src/win/encoding.cc src/win/encoding.hpp src/misc/custom_include_spdlog.hpp src/model/song_list.cc src/model/song_list.hpp src/model/serializable.cc src/model/serializable.hpp
-    # src/tray/tray.cc
-    # src/tray/tray.hpp
-    
-    src/misc/consts.hpp)
+file(GLOB_RECURSE musicPlaycntSRC LIST_DIRECTORIES false
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Res/*.rc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Res/*.hpp")
+
+add_executable(musicPlaycnt ${musicPlaycntSRC})
 
 if (WIN32)
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
