@@ -13,6 +13,8 @@ public:
 
   static void start_non_executable_file(const std::string&  path);
 
+  static  std::string get_thread_description();
+
 private:
 
 };

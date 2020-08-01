@@ -14,6 +14,9 @@ char const* msw::exceptions::ApplicationError::what() const noexcept {
   }
   if (!function_.empty() || !filename_.empty() || line_) {
     cached_what_ += " At: "s + function_ + "(" + filename_ + ":" + std::to_string(line_) + ")";
+    if (stack_trace_.size() > 0) {
+      cached_what_ += ' ' + stacktrace();
+    }
   }
   return cached_what_.c_str();
 }
@@ -39,9 +42,8 @@ std::wstring msw::exceptions::WinApiError::what_w() const {
 
 char const* msw::exceptions::WinApiError::what() const noexcept {
   // ReSharper disable once CppExpressionWithoutSideEffects
-  ErrorCode::what();
-  cached_what_.insert(0, "TBD: IMPLEMENT CORRECT WIN EXCEPTION WHAT\n  ");
-  cached_what_ += encoding::utf16_to_utf8(win_error_message());
+  ApplicationError::what();
+  cached_what_ += '\n' + encoding::utf16_to_utf8(win_error_message());
   return cached_what_.c_str();
 }
 

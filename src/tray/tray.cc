@@ -123,6 +123,11 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         //    MB_ICONEXCLAMATION | MB_OK);
         assert(false && "not really implemented .... what next?");
         get_tray_from_window(hwnd)->on_exit();
+      case CUSTOM_CHANGE_NOTIFY:
+        SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
+        
+        get_tray_from_window(hwnd)->listener_.listen();
+        return 0;
     }
   } catch (msw::exceptions::WinApiError const& any) {
     SPDLOG_CRITICAL(any.what());
@@ -246,5 +251,6 @@ void Tray::send_windows_message(UINT msg) const {
 
 Tray::Tray(HINSTANCE hinstance, const model::AppConfig& cfg)
   : hinstance_(hinstance),
-    cfg_(cfg) {
+    cfg_(cfg),
+    listener_(this) {
 }

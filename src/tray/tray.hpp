@@ -2,6 +2,7 @@
 
 #include <src/win/windows_headers.hpp>
 #include <shellapi.h>
+#include "listener.hpp"
 
 
 namespace msw {
@@ -17,6 +18,7 @@ class Tray {
   HWND hwnd_{};
 
   const model::AppConfig& cfg_;
+  Listener listener_;
 
   NOTIFYICONDATA create_notifyicondata_structure(HICON icon);
   void make_window(int n_cmd_show, HICON h_icon);

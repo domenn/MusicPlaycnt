@@ -112,6 +112,21 @@ void msw::helpers::Utilities::start_non_executable_file(const std::string& path)
 #endif
 }
 
+std::string msw::helpers::Utilities::get_thread_description() {
+#ifdef _DLL
+  wchar_t* data;
+  std::string return_val{};
+  HRESULT hr = GetThreadDescription(GetCurrentThread(), &data);
+  if (SUCCEEDED(hr)) {
+    return_val = encoding::utf16_to_utf8(data);
+    LocalFree(data);
+  }
+  return return_val;
+#else
+  return "notImplemented";
+#endif
+}
+
 template std::pair<std::string, std::string> msw::helpers::Utilities::get_parent_folder_and_filename(
     const std::string& path);
 template std::pair<std::wstring, std::wstring> msw::helpers::Utilities::get_parent_folder_and_filename(

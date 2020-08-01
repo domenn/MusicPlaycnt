@@ -116,21 +116,16 @@ int main(int argc, char** argv) {
                      .log_to_file(true)
                      .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
                      .log_to_file(true));
+
+#ifdef _DLL
+  SetThreadDescription(GetCurrentThread(), L"MainThread");
+#endif
+
   CmdParse cmd_parse(GetCommandLineW());
   auto cfg = get_or_create_config();
-  //try {
-  //  listen_this(msw::encoding::utf8_to_utf16(cfg.file_to_listen().c_str()).c_str());
-  //} catch (const msw::exceptions::ErrorCode& err) {
-  //  SPDLOG_CRITICAL("MS example failed with {}\n{}{}",
-  //                  typeid(err).name(),
-  //                  err.what(),
-  //                  err.stacktrace());
-  //  return err.code();
-  //}
 
   if (cmd_parse.is_listen()) {
     msw::tray::Tray main_tray(hInstance, cfg);
-    msw::tray::Listener listener(&main_tray);
     return main_tray.run_message_loop();
   }
 
