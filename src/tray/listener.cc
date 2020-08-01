@@ -4,37 +4,17 @@
 #include "src/model/app_config.hpp"
 #include "src/win/encoding.hpp"
 
-#include <FileWatcher/FileWatcher.h>
 #include <spdlog/spdlog.h>
+#include "src/win/winapi_exceptions.hpp"
 
-namespace msw {
-/// Processes a file action
-class UpdateListener : public FW::FileWatchListener {
-public:
-  UpdateListener(tray::Tray* tray, std::string const& file_name);
+LPOVERLAPPED_COMPLETION_ROUTINE LpoverlappedCompletionRoutine;
 
-  void handleFileAction(FW::WatchID watchid,
-                        const FW::String& dir,
-                        const FW::String& filename,
-                        FW::Action action) override;
-  tray::Tray* tray_;
-  std::wstring file_name_;
-};
-
-UpdateListener::UpdateListener(tray::Tray* tray, std::string const& file_name)
-  : tray_(tray),
-    file_name_(msw::encoding::utf8_to_utf16(file_name.c_str())) {
-
-}
-
-void UpdateListener::handleFileAction(FW::WatchID watchid,
-                                      const FW::String& dir,
-                                      const FW::String& filename,
-                                      FW::Action action) {
-  if (filename == file_name_) {
-    SPDLOG_INFO("change as needed!");
-  }
-}
+void LpoverlappedCompletionRoutine1(
+    DWORD dwErrorCode,
+    DWORD dwNumberOfBytesTransfered,
+    OVERLAPPED* lpOverlapped
+    ) {
+  SPDLOG_INFO("The routine!!!");
 }
 
 msw::tray::Listener::Listener(Tray* tray)
@@ -44,17 +24,41 @@ msw::tray::Listener::Listener(Tray* tray)
 
   auto folder_path_w = msw::encoding::utf8_to_utf16(folder_path.c_str());
 
-  //HANDLE h_directory = CreateFileW(folder_path_w.c_str(), FILE_LIST_DIRECTORY | GENERIC_READ, 
-  // FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
-  // NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 
-  // )
-  //
-  UpdateListener* listener = new UpdateListener(tray, filename);
-  FW::FileWatcher* fileWatcher = new FW::FileWatcher;
-  FW::WatchID watchID = fileWatcher->addWatch(folder_path_w, listener, true);
-  while (true) {
-    SPDLOG_INFO("Calling update ...");
-    std::this_thread::sleep_for(std::chrono::milliseconds(800));
-    fileWatcher->update();
+  HANDLE h_directory = CreateFileW(folder_path_w.c_str(),
+                                   FILE_LIST_DIRECTORY | GENERIC_READ,
+                                   FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
+                                   nullptr,
+                                   OPEN_EXISTING,
+                                   FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED,
+                                   nullptr
+      );
+  if (h_directory == INVALID_HANDLE_VALUE) {
+    throw msw::exceptions::WinApiError(GetLastError(),
+                                       "CreateFileW",
+                                       MSW_TRACE_ENTRY_CREATE,
+                                       "Open directory for listening changes");
   }
+
+  FILE_NOTIFY_INFORMATION* file_notify_information = new FILE_NOTIFY_INFORMATION[8];
+  const auto fn_size = sizeof(FILE_NOTIFY_INFORMATION) * 8;
+
+  OVERLAPPED* overlapped = new OVERLAPPED{};
+
+  auto read_result = ReadDirectoryChangesW(h_directory,
+                                           file_notify_information,
+                                           fn_size,
+                                           false,
+                                           FILE_NOTIFY_CHANGE_LAST_WRITE | FILE_NOTIFY_CHANGE_ATTRIBUTES,
+                                           nullptr,
+                                           overlapped,
+                                           &LpoverlappedCompletionRoutine1
+      );
+
+  if (!read_result) {
+    throw msw::exceptions::WinApiError(GetLastError(),
+                                       "ReadDirectoryChangesW",
+                                       MSW_TRACE_ENTRY_CREATE,
+                                       "Listening changes async");
+  }
+
 }

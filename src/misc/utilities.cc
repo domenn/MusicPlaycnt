@@ -67,12 +67,23 @@ std::string msw::helpers::Utilities::get_parent_folder(const std::string& path) 
   return get_parent_folder_and_filename(path).first;
 }
 
-std::pair<std::string, std::string> msw::helpers::Utilities::get_parent_folder_and_filename(const std::string& path) {
+template <typename char_t>
+std::basic_string<char_t> get_file_separator() {
+  if constexpr (std::is_same<char_t, wchar_t>::value) {
+    return L"\\/";
+  } else {
+    return "\\/";
+  }
+}
+
+template <typename char_t>
+std::pair<std::basic_string<char_t>, std::basic_string<char_t>> msw::helpers::Utilities::get_parent_folder_and_filename(
+    const std::basic_string<char_t>& path) {
   try {
-    const auto idx = path.find_last_of("\\/");
+    const auto idx = path.find_last_of(get_file_separator<char_t>());
     return std::make_pair(path.substr(0, idx), path.substr(idx + 1));
   } catch (const std::exception& x) {
-    const std::string msg = "Getting parent folder of " + path + " failed. Exception "
+    const std::string msg = "Getting parent folder of " + encoding::ensure_utf8(std::move(path)) + " failed. Exception "
                             + typeid(x).name() + " was thrown:\n " + x.what();
     throw msw::exceptions::ApplicationError(msg.c_str(), MSW_TRACE_ENTRY_CREATE);
   }
@@ -100,3 +111,8 @@ void msw::helpers::Utilities::start_non_executable_file(const std::string& path)
   THROW_IF_ERROR_LINUX
 #endif
 }
+
+template std::pair<std::string, std::string> msw::helpers::Utilities::get_parent_folder_and_filename(
+    const std::string& path);
+template std::pair<std::wstring, std::wstring> msw::helpers::Utilities::get_parent_folder_and_filename(
+    const std::wstring& path);

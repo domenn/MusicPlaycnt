@@ -90,7 +90,8 @@ msw::model::AppConfig get_or_create_config() {
     return msw::Serializable::from_file<msw::model::AppConfig>(msw::model::AppConfig::get_path_to_config_file());
   } catch (const msw::exceptions::ErrorCode& err) {
     if (err.is_enoent()) {
-      const auto path = msw::helpers::Utilities::file_in_app_folder_with_creating_app_folder(msw::consts::CONFIG_FILENAME);
+      const auto path = msw::helpers::Utilities::file_in_app_folder_with_creating_app_folder(
+          msw::consts::CONFIG_FILENAME);
       msw::model::AppConfig new_config;
       new_config.set_file_to_listen(sago::getMusicFolder() + "/foo_np_log.txt");
       new_config.set_library_path(sago::getMusicFolder() + "/my_music");
@@ -100,6 +101,9 @@ msw::model::AppConfig get_or_create_config() {
     throw;
   }
 }
+
+void listen_this(const wchar_t* fn);
+
 #ifdef _WIN32
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
   SetConsoleOutputCP(CP_UTF8);
@@ -113,8 +117,16 @@ int main(int argc, char** argv) {
                      .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
                      .log_to_file(true));
   CmdParse cmd_parse(GetCommandLineW());
-
   auto cfg = get_or_create_config();
+  //try {
+  //  listen_this(msw::encoding::utf8_to_utf16(cfg.file_to_listen().c_str()).c_str());
+  //} catch (const msw::exceptions::ErrorCode& err) {
+  //  SPDLOG_CRITICAL("MS example failed with {}\n{}{}",
+  //                  typeid(err).name(),
+  //                  err.what(),
+  //                  err.stacktrace());
+  //  return err.code();
+  //}
 
   if (cmd_parse.is_listen()) {
     msw::tray::Tray main_tray(hInstance, cfg);

@@ -113,6 +113,7 @@ public:
   char const* what() const noexcept override;
   bool is_enoent() const;
   bool is_already_exists() const;
+  int code() const { return error_code_; }
 };
 
 class WinApiError : public ErrorCode {
