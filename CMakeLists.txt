@@ -43,8 +43,6 @@ file(GLOB_RECURSE musicPlaycntSRC LIST_DIRECTORIES false
 
 if (MSVC)
   list(APPEND musicPlaycntSRC ${CMAKE_SOURCE_DIR}/external/StackWalker.cpp)
-  list(APPEND musicPlaycntSRC ${CMAKE_SOURCE_DIR}/external/file_watcher/FileWatcherWin32.cpp)
-  list(APPEND musicPlaycntSRC ${CMAKE_SOURCE_DIR}/external/file_watcher/FileWatcher.cpp)
 endif ()
 
 
