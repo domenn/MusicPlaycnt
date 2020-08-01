@@ -10,8 +10,13 @@
 #endif
 
 #include "misc/spd_logging.hpp"
-#include "tray/tray.hpp"
 #include "model/app_config.hpp"
+#include "tray/tray.hpp"
+#include "misc/utilities.hpp"
+#include "win/winapi_exceptions.hpp"
+#include <sago/platform_folders.h>
+#include "tray/listener.hpp"
+
 
 class CmdParse {
   class ArgcArgv {
@@ -79,6 +84,22 @@ public:
   }
 };
 
+
+msw::model::AppConfig get_or_create_config() {
+  try {
+    return msw::Serializable::from_file<msw::model::AppConfig>(msw::model::AppConfig::get_path_to_config_file());
+  } catch (const msw::exceptions::ErrorCode& err) {
+    if (err.is_enoent()) {
+      const auto path = msw::helpers::Utilities::file_in_app_folder_with_creating_app_folder(msw::consts::CONFIG_FILENAME);
+      msw::model::AppConfig new_config;
+      new_config.set_file_to_listen(sago::getMusicFolder() + "/foo_np_log.txt");
+      new_config.set_library_path(sago::getMusicFolder() + "/my_music");
+      new_config.serialize(path);
+      return new_config;
+    }
+    throw;
+  }
+}
 #ifdef _WIN32
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
   SetConsoleOutputCP(CP_UTF8);
@@ -93,13 +114,11 @@ int main(int argc, char** argv) {
                      .log_to_file(true));
   CmdParse cmd_parse(GetCommandLineW());
 
-  msw::model::AppConfig::instance().set_file_to_listen(R"(C:\Users\Domen\Everything\complicated_music_tools\foobarLogger\foo_np_log.txt)");
-  msw::model::AppConfig::instance().set_library_path(R"(F:\shared_content\muzq\All)");
-  msw::model::AppConfig::instance().store_to_file("Playcntv2.config");
+  auto cfg = get_or_create_config();
 
   if (cmd_parse.is_listen()) {
-    msw::tray::Tray main_tray(hInstance);
-    // printreg::ListenerThread::start_registry_listener(&main_tray);
+    msw::tray::Tray main_tray(hInstance, cfg);
+    msw::tray::Listener listener(&main_tray);
     return main_tray.run_message_loop();
   }
 

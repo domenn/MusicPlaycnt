@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # _V=1
 
 YELLOW='\033[1;33m'
@@ -46,6 +46,8 @@ EXTRA_CMAKES=
 BUILD_DIR_SFX=nix
 CMAKE_BUILD_CMD="--build . && cmake --build . --target install"
 UNAME=$(uname)
+echo $UNAME
+logv $UNAME
 if [[ "$UNAME" == CYGWIN* || "$UNAME" == MINGW* ]] ; then
   logv we have windows
 	# Windows: If we have gcc, use it. Otherwise msvc.
@@ -62,6 +64,9 @@ if [[ "$UNAME" == CYGWIN* || "$UNAME" == MINGW* ]] ; then
     CMAKE_BUILD_CMD="--build . --config Debug && cmake --build . --config Release && cmake --build . --config Debug --target install && cmake --build . --config Release --target install"
     BUILD_DIR_SFX=msvc
 	fi
+else
+  logv we have Linux
+  INS_PREFIX=installs_lnx
 fi
 logv EXTRA_CMAKES "${EXTRA_CMAKES[@]}"
 

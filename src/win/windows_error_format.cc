@@ -1,7 +1,7 @@
 #ifdef _WIN32
 
-#include "windows_error_format.hpp"
 #include <src/win/windows_headers.hpp>
+#include "windows_error_format.hpp"
 #include <src/win/encoding.hpp>
 #include <strsafe.h>
 

@@ -41,6 +41,13 @@ file(GLOB_RECURSE musicPlaycntSRC LIST_DIRECTORIES false
     "${CMAKE_CURRENT_SOURCE_DIR}/Res/*.rc"
     "${CMAKE_CURRENT_SOURCE_DIR}/Res/*.hpp")
 
+if (MSVC)
+  list(APPEND musicPlaycntSRC ${CMAKE_SOURCE_DIR}/external/StackWalker.cpp)
+  list(APPEND musicPlaycntSRC ${CMAKE_SOURCE_DIR}/external/file_watcher/FileWatcherWin32.cpp)
+  list(APPEND musicPlaycntSRC ${CMAKE_SOURCE_DIR}/external/file_watcher/FileWatcher.cpp)
+endif ()
+
+
 add_executable(musicPlaycnt ${musicPlaycntSRC})
 
 if (WIN32)
@@ -54,6 +61,8 @@ if (WIN32)
   endif ()
 else ()
 endif (WIN32)
+
+target_include_directories(musicPlaycnt PRIVATE ${CMAKE_SOURCE_DIR}/external/include)
 
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
@@ -72,7 +81,9 @@ endif ()
 
 if (MSVC)
   find_package(platform_folders REQUIRED HINTS ${CMAKE_SOURCE_DIR}/ext/installs_msvc)
-else ()
+elseif (UNIX)
+  find_package(platform_folders REQUIRED HINTS ${CMAKE_SOURCE_DIR}/ext/installs_lnx)
+else()
   find_package(platform_folders REQUIRED HINTS ${CMAKE_SOURCE_DIR}/ext/installs)
 endif ()
 #if(${platform_folders_FOUND})

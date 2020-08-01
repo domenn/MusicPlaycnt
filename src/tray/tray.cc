@@ -5,6 +5,8 @@
 #include "../../Res/resource.hpp"
 #include <shellapi.h>
 #include "src/misc/consts.hpp"
+#include "src/misc/utilities.hpp"
+#include "src/model/app_config.hpp"
 
 using namespace msw;
 using namespace tray;
@@ -17,7 +19,7 @@ LRESULT Tray::create_menu(Tray* tray) {
   }
   SPDLOG_DEBUG(L"Loading menu from the resource.");
   const auto loaded_menu = LoadMenu(reinterpret_cast<HINSTANCE>(tray->hinstance_),
-                                    MAKEINTRESOURCE(PRINTFX_MENU_TRAY_RIGHTCLICK));
+                                    MAKEINTRESOURCE(APP_MENU_TRAY_RIGHTCLICK));
   tray->menu_to_display_ = GetSubMenu(loaded_menu, 0);
 
   SetMenuDefaultItem(tray->menu_to_display_, 0, TRUE);
@@ -39,10 +41,13 @@ void Tray::on_exit() const {
 void Tray::handle_menu_choice(BOOL clicked) const {
   SPDLOG_TRACE("Menu click: " + std::to_wstring(clicked));
   switch (clicked) {
-    case PRINTFX_MENU_ENTRY_VERSION:
+    case APP_MENU_ENTRY_VERSION:
       on_version();
       break;
-    case PRINTFX_MENU_ENTRY_EXIT:
+    case APP_MENU_ENTRY_OPEN_CFG:
+      msw::helpers::Utilities::start_non_executable_file(msw::model::AppConfig::get_path_to_config_file());
+      break;
+    case APP_MENU_ENTRY_EXIT:
       on_exit();
       break;
   }
@@ -239,6 +244,7 @@ void Tray::send_windows_message(UINT msg) const {
   }
 }
 
-Tray::Tray(HINSTANCE hinstance)
-  : hinstance_(hinstance) {
+Tray::Tray(HINSTANCE hinstance, const model::AppConfig& cfg)
+  : hinstance_(hinstance),
+    cfg_(cfg) {
 }

@@ -29,7 +29,7 @@
 // Look into SDKDDKVer.h to see what those numbers mean.
 #define NTDDI_VERSION 0x0A000000
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT  0x0A00 // Windows 10
+#define _WIN32_WINNT 0x0A00  // Windows 10
 #else
 #pragma message "WINNT already defined to " DIAG__HIDDEN_PRINT_XSTR(_WIN32_WINNT)
 #endif
@@ -37,5 +37,8 @@
 #define _WIN32_IE 0x0A00
 
 #include <Windows.h>
+#ifdef __MINGW32__
+#include <sys/stat.h>
+#endif
 
 #endif

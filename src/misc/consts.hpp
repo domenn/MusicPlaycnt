@@ -11,6 +11,9 @@ namespace msw::consts {
 
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(PROGRAM_NAME_SHORT, "musicPlaycnt2")
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(CLI_PROGRAM_DESCTIPTION, "Complicated music tagger and count tracker.")
+LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(CONFIG_FILENAME, "Playcntv2.config")
+LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(LISTENER_THREAD_NAME, "ThFileChListn")
+
 
 namespace ver {
 constexpr static wchar_t PROGRAM_NAME_AND_VERSION[] =
@@ -25,14 +28,6 @@ constexpr static wchar_t PROGRAM_NAME_AND_VERSION[] =
 W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(VERSION_HEADER, "About")
 }  // namespace ver
 
-namespace registry {
-W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(LISTENED_KEY,
-                                  R"(Software\Microsoft\Windows NT\CurrentVersion\Windows\SessionDefaultDevices)")
-
-W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(KEY_TO_CHANGE, R"(Software\Microsoft\Windows NT\CurrentVersion\Windows)")
-W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(VALUE_TO_CHANGE, "device")
-
-}  // namespace registry
 
 namespace win {
 W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(WIN_HEADER_TXT, "TS keep-up remote session printers.")

@@ -2,12 +2,13 @@
 
 WRES_ICON_ICO ICON "tray_icon_one.ico"
 
-PRINTFX_MENU_TRAY_RIGHTCLICK MENU
+APP_MENU_TRAY_RIGHTCLICK MENU
 BEGIN
     POPUP "_POPUP_"
     BEGIN
-        MENUITEM "Version",                     PRINTFX_MENU_ENTRY_VERSION
+        MENUITEM "Version",                     APP_MENU_ENTRY_VERSION
+        MENUITEM "Open config",                 APP_MENU_ENTRY_OPEN_CFG
         MENUITEM SEPARATOR
-        MENUITEM "Exit",                        PRINTFX_MENU_ENTRY_EXIT
+        MENUITEM "Exit",                        APP_MENU_ENTRY_EXIT
     END
 END

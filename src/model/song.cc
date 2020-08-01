@@ -5,35 +5,16 @@
 
 #include <src/misc/custom_include_spdlog.hpp>
 #include <sstream>
+#include <utility>
 
 #include "../misc/open_wrap.hpp"
 #include "serializable.hpp"
-
-std::string msw::model::Song::serialize() const {
-  //  cp_open_lw(filename, O_WRONLY | O_CREAT | O_TRUNC, get_wr_pmode(), OpenModeWin::BINARY);
-  //  if (new_file == -1) {
-  //    throw ErrCodeException(fmt::format("At: {}{}{}{}\n Cannot write file: {}. open() error (code {{}} - {}): {}",
-  //                                       D_U_M_FUNC_FILE_LINE_TRACE_IN_FMT,
-  //                                       filename,
-  //                                       errnoname(my_errno),
-  //                                       d_common::safe::strerror(my_errno)),
-  //                           my_errno);
-  //  }
-  //  google::protobuf::io::FileOutputStream proto_os(new_file);
-  //  proto_os.SetCloseOnDelete(true);
-  //  google::protobuf::TextFormat::Print(message, &proto_os);
-
-  std::string returning;
-  google::protobuf::io::StringOutputStream string_output_stream(&returning);
-  google::protobuf::TextFormat::Print(song_, &string_output_stream);
-  return returning;
-}
 
 msw::model::Song msw::model::Song::deserialize_from_file(const std::string& file_on_disk) {
   msw_proto_song::Song empty_proto_song;
   auto [handle, my_errno] = cp_open_lw(file_on_disk.c_str(), O_RDONLY);
   if (handle == -1) {
-    //throw ErrCodeException(fmt::format("At: {}{}{}{}\n Cannot read file: {}. open() error (code {{}} - {}): {}",
+    // throw ErrCodeException(fmt::format("At: {}{}{}{}\n Cannot read file: {}. open() error (code {{}} - {}): {}",
     //                                   D_U_M_FUNC_FILE_LINE_TRACE_IN_FMT,
     //                                   str_config_file_path,
     //                                   errnoname(my_errno),
@@ -43,17 +24,15 @@ msw::model::Song msw::model::Song::deserialize_from_file(const std::string& file
     throw std::runtime_error("cp_open_lw (protobuf low level file IO) failed with code " + std::to_string(my_errno));
   }
   google::protobuf::io::FileInputStream proto_is(handle);
-//#ifndef _MSC_VER
+  //#ifndef _MSC_VER
   proto_is.SetCloseOnDelete(true);
-//#endif
+  //#endif
   google::protobuf::TextFormat::Parse(&proto_is, &empty_proto_song);
-//   proto_is.Close();
+  //   proto_is.Close();
   return empty_proto_song;
 }
 
-msw::model::Song::Song(msw_proto_song::Song song)
-  : song_(std::move(song)) {
-}
+msw::model::Song::Song(msw_proto_song::Song song) : Serializable(proto_song_), proto_song_(std::move(song)) {}
 
 void msw::model::Song::testing_create_restore() {
   msw_proto_song::Song proto_song;
@@ -65,12 +44,12 @@ void msw::model::Song::testing_create_restore() {
 
   Song song1(std::move(proto_song));
   std::string serd = song1.serialize();
+  song1.serialize(std::string("C:\\users\\public\\f1.txt"));
   SPDLOG_INFO("Serialized first " + serd);
 
   Song song2 = deserialize(serd);
   SPDLOG_INFO("Restored and again serd ... what happens: {}", serd);
 }
-
 
 msw::model::Song msw::model::Song::deserialize(const std::string& contents) {
   msw_proto_song::Song empty_proto_song;

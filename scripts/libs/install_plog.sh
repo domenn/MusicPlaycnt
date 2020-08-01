@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 _V=0
 PLOG_VER=1.1.5
 
