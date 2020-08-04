@@ -30,6 +30,7 @@ msw::tray::Listener::Listener(Tray* tray)
       encoding::utf8_to_utf16(discardable.first.c_str()),
       encoding::utf8_to_utf16(discardable.second.c_str())
       );
+  SPDLOG_TRACE("Listener will setup: {}\\;\\{}", discardable.first, discardable.second);
   change_handle_ = FindFirstChangeNotification(
       folder_.c_str(),
       FALSE,

@@ -12,12 +12,53 @@ const std::string& msw::model::AppConfig::file_to_listen() const {
   return proto_app_config_.filetolisten();
 }
 
+std::vector<std::string> msw::model::AppConfig::delimiters() const {
+  const auto d_size = proto_app_config_.delimiters_size();
+  std::vector<std::string> returns;
+  returns.reserve(proto_app_config_.delimiters_size());
+  for (auto delimiter : proto_app_config_.delimiters()) {
+    returns.emplace_back(std::move(delimiter));
+  }
+  return returns;
+}
+
+
+const std::string& msw::model::AppConfig::DelimiterIterable::operator*() const {
+  return app_config_->proto_app_config_.delimiters(idx_);
+}
+
+const std::string* msw::model::AppConfig::DelimiterIterable::operator->() const {
+  return &app_config_->proto_app_config_.delimiters(idx_);
+}
+
+
+msw::model::AppConfig::DelimiterIterable msw::model::AppConfig::iterate_delimiters() const {
+  return DelimiterIterable(this);
+}
+
+msw::model::AppConfig::DelimiterIterable msw::model::AppConfig::DelimiterIterable::begin() const {
+  return DelimiterIterable{app_config_, 0};
+}
+
+msw::model::AppConfig::DelimiterIterable msw::model::AppConfig::DelimiterIterable::end() const {
+  return DelimiterIterable{app_config_, app_config_->proto_app_config_.delimiters_size()};
+}
+
+void msw::model::AppConfig::set_delimiters(std::vector<std::string> delimiters) {
+  for (auto&& delimiter : delimiters) {
+    proto_app_config_.add_delimiters(std::move(delimiter));
+  }
+}
+
 std::string msw::model::AppConfig::get_path_to_config_file() {
   return msw::helpers::Utilities::file_in_app_folder(msw::consts::CONFIG_FILENAME);
 }
 
 msw::model::AppConfig::AppConfig(msw::model::AppConfig&& other) noexcept
-    : Serializable(proto_app_config_), proto_app_config_(std::move(other.proto_app_config_)) {}
+  : Serializable(&proto_app_config_),
+    proto_app_config_(std::move(other.proto_app_config_)) {
+}
+
 // msw::model::AppConfig msw::model::AppConfig::from_file() {
 //  AppConfig app_config;
 //  return msw::model::AppConfig(model::AppConfig());

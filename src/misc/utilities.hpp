@@ -9,13 +9,42 @@ public:
   static std::string file_in_app_folder_with_creating_app_folder(std::string file_name);
   static std::string get_parent_folder(const std::string& path);
   template <typename char_t>
-  static std::pair<std::basic_string<char_t>, std::basic_string<char_t>> get_parent_folder_and_filename(const std::basic_string<char_t>& cs);
+  static std::pair<std::basic_string<char_t>, std::basic_string<char_t>> get_parent_folder_and_filename(
+      const std::basic_string<char_t>& cs);
 
-  static void start_non_executable_file(const std::string&  path);
+  static void start_non_executable_file(const std::string& path);
 
-  static  std::string get_thread_description();
+  static std::string get_thread_description();
 
-private:
+  static std::string& ltrim(std::string& s) {
 
+    s.erase(s.begin(),
+            std::find_if(s.begin(),
+                         s.end(),
+                         [](int ch)
+                         {
+                           return !std::isspace(ch);
+                         }));
+    return s;
+  }
+
+
+  static std::string& rtrim(std::string& s) {
+    s.erase(std::find_if(s.rbegin(),
+                         s.rend(),
+                         [](int ch)
+                         {
+                           return !std::isspace(ch);
+                         }).base(),
+            s.end());
+    return s;
+  }
+
+  static std::string& trim(std::string& s) {
+    ltrim(s);
+    rtrim(s);
+    return s;
+  }
 };
+
 }

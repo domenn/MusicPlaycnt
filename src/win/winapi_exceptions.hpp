@@ -82,6 +82,10 @@ public:
   char const* what() const noexcept override;
   virtual ~ApplicationError() = default;
 
+#ifdef _WIN32
+  std::wstring what_w() const;
+#endif
+
   std::string stacktrace() const {
     std::ostringstream oss;
     oss << " at: ";
@@ -118,7 +122,6 @@ public:
 
 class WinApiError : public ErrorCode {
 public:
-  std::wstring what_w() const;
   char const* what() const noexcept override;
 
   WinApiError(int error_code,

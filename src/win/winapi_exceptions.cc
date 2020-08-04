@@ -10,7 +10,7 @@ using namespace std::literals::string_literals;
 char const* msw::exceptions::ApplicationError::what() const noexcept {
   const auto parent_what = runtime_error::what();
   if (parent_what != nullptr && *parent_what != '\0') {
-    cached_what_ = parent_what;
+    cached_what_ = parent_what + '\n';
   }
   if (!function_.empty() || !filename_.empty() || line_) {
     cached_what_ += " At: "s + function_ + "(" + filename_ + ":" + std::to_string(line_) + ")";
@@ -20,6 +20,13 @@ char const* msw::exceptions::ApplicationError::what() const noexcept {
   }
   return cached_what_.c_str();
 }
+
+#ifdef _WIN32
+std::wstring msw::exceptions::ApplicationError::what_w() const {
+  return msw::encoding::utf8_to_utf16(what());
+}
+#endif
+
 
 char const* msw::exceptions::ErrorCode::what() const noexcept {
   // ReSharper disable once CppExpressionWithoutSideEffects
@@ -34,10 +41,6 @@ bool msw::exceptions::ErrorCode::is_enoent() const {
 
 bool msw::exceptions::ErrorCode::is_already_exists() const {
   return error_code_ == EEXIST;
-}
-
-std::wstring msw::exceptions::WinApiError::what_w() const {
-  return msw::encoding::utf8_to_utf16(what());
 }
 
 char const* msw::exceptions::WinApiError::what() const noexcept {

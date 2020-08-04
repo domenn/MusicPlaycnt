@@ -16,7 +16,7 @@ constexpr auto get_wr_pmode() {
 
 std::string msw::Serializable::serialize() {
   std::string returning;
-  google::protobuf::TextFormat::PrintToString(underlying_object_, &returning);
+  google::protobuf::TextFormat::PrintToString(*underlying_object_, &returning);
   return returning;
 }
 
@@ -51,7 +51,7 @@ google::protobuf::io::FileInputStream msw::Serializable::open_file_for_reading(c
 }
 
 void msw::Serializable::serialize_impl(google::protobuf::io::ZeroCopyOutputStream& output_stream) {
-  if (!google::protobuf::TextFormat::Print(underlying_object_, &output_stream)) {
+  if (!google::protobuf::TextFormat::Print(*underlying_object_, &output_stream)) {
     throw msw::exceptions::ApplicationError("Protobuf print failed", MSW_TRACE_ENTRY_CREATE);
   }
 }
@@ -73,11 +73,11 @@ void msw::Serializable<proto_t>::serialize_impl(google::protobuf::io::ZeroCopyOu
 //template class msw::Serializable<msw_proto_song::Song>;
 //template class msw::Serializable<msw_proto_cfg::PlaycntConfig>;
 
-msw::Serializable::Serializable(google::protobuf::Message& underlying_object)
+msw::Serializable::Serializable(google::protobuf::Message* underlying_object)
   : underlying_object_(underlying_object) {
 }
 void msw::Serializable::read_impl(google::protobuf::io::ZeroCopyInputStream& input_stream) {
-  if (!google::protobuf::TextFormat::Parse(&input_stream, &underlying_object_)) {
+  if (!google::protobuf::TextFormat::Parse(&input_stream, underlying_object_)) {
     throw msw::exceptions::ApplicationError("Protobuf read failed", MSW_TRACE_ENTRY_CREATE);
   }
 }
@@ -90,4 +90,13 @@ T msw::Serializable::from_file(std::string const& in_path) {
   return serializable;
 }
 
+template <typename proto_message_type>
+std::string msw::Serializable::serialize(const proto_message_type& msg) {
+  std::string returning;
+  google::protobuf::TextFormat::PrintToString(msg, &returning);
+  return returning;
+}
+
 template msw::model::AppConfig msw::Serializable::from_file<msw::model::AppConfig>(std::string const& in_path);
+template std::string msw::Serializable::serialize<msw_proto_song::Song>(const msw_proto_song::Song& );
+template std::string msw::Serializable::serialize<msw_proto_song::SongWithMetadata>(const msw_proto_song::SongWithMetadata& );

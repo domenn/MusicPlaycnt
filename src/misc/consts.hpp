@@ -15,6 +15,12 @@ LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(CONFIG_FILENAME, "Playcntv2.config")
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(LISTENER_THREAD_NAME, "ThFileChListn")
 
 
+// b	parses the month name, either full or abbreviated, e.g. Oct
+// a	parses the name of the day of the week, either full or abbreviated, e.g. Fri	tm_wday
+// d	parses the day of the month as a decimal number (range [01,31]), leading zeroes permitted but not required
+LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(FOO_TIME_FMT, "%a %b %d %H:%M:%S %Y")
+
+
 namespace ver {
 constexpr static wchar_t PROGRAM_NAME_AND_VERSION[] =
     L"Music playcount tracker\n"

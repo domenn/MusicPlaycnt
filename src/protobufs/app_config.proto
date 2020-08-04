@@ -5,4 +5,5 @@ package msw_proto_cfg;
 message PlaycntConfig {
   string LibraryPath = 1;
   string FileToListen = 2;
+  repeated string Delimiters = 3;
 }

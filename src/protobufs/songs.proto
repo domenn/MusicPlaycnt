@@ -14,3 +14,13 @@ message Songs {
     repeated Song songs = 1;
 }
 
+message SongWithMetadata {
+    Song song = 1;
+    uint64 action_timestamp = 2;
+    enum ActionType {
+        PLAY = 0;
+        PAUSE = 1;
+        STOP = 2;
+      }
+    ActionType action_type = 3;
+}

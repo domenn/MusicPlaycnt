@@ -95,6 +95,7 @@ msw::model::AppConfig get_or_create_config() {
       msw::model::AppConfig new_config;
       new_config.set_file_to_listen(sago::getMusicFolder() + "/foo_np_log.txt");
       new_config.set_library_path(sago::getMusicFolder() + "/my_music");
+      new_config.set_delimiters({";", ": ", " ;; ", " ;; ", " ;;; "});
       new_config.serialize(path);
       return new_config;
     }
@@ -120,16 +121,13 @@ int main(int argc, char** argv) {
 #ifdef _DLL
   SetThreadDescription(GetCurrentThread(), L"MainThread");
 #endif
-
   CmdParse cmd_parse(GetCommandLineW());
   auto cfg = get_or_create_config();
-
   if (cmd_parse.is_listen()) {
     msw::tray::Tray main_tray(hInstance, cfg);
     return main_tray.run_message_loop();
   }
 
-  msw::model::Song::testing_create_restore();
   msw::model::SongList::example_songlists();
 
   return 0;

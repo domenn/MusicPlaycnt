@@ -20,15 +20,19 @@ namespace msw {
 
 class Serializable {
  protected:
-  google::protobuf::Message& underlying_object_;
+  google::protobuf::Message* underlying_object_{};
 
-  explicit Serializable(google::protobuf::Message& underlying_object);
+  explicit Serializable(google::protobuf::Message* underlying_object);
+  Serializable() = default;
 
  public:
   std::string serialize();
   void serialize(std::string output_path);
   template <typename T>
   static T from_file(std::string const& output_path);
+
+  template <typename proto_message_type>
+  static std::string serialize(const proto_message_type& msg);
 
  private:
   google::protobuf::io::FileOutputStream open_file_for_writing(const std::string& path);
