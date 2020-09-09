@@ -10,6 +10,7 @@
 #include "../misc/open_wrap.hpp"
 #include "serializable.hpp"
 #include "src/win/winapi_exceptions.hpp"
+#include <google/protobuf/util/message_differencer.h>
 
 msw::model::Song msw::model::Song::deserialize_from_file(const std::string& file_on_disk) {
   msw_proto_song::Song empty_proto_song;
@@ -30,7 +31,12 @@ msw::model::Song msw::model::Song::deserialize_from_file(const std::string& file
   return empty_proto_song;
 }
 
-msw::model::Song::Song(msw_proto_song::Song song)
+msw::model::Song::Song()
+  : proto_song_containing_optional_{std::in_place} {
+  underlying_object_ = &proto_song_containing_optional_.value();
+}
+
+msw::model::Song::Song(msw_proto_song::Song&& song)
   : proto_song_containing_optional_(std::move(song)) {
   underlying_object_ = &proto_song_containing_optional_.value();
 }
@@ -39,21 +45,12 @@ msw::model::Song::Song(msw_proto_song::Song* song)
   : Serializable(song) {
 }
 
-void msw::model::Song::testing_create_restore() {
-  msw_proto_song::Song proto_song;
-  proto_song.set_album("oneAlbum");
-  proto_song.set_artist("oneArtist");
-  proto_song.set_title("TITTELLL!!!!");
-  proto_song.set_path("OnePath ....");
-  proto_song.set_playcnt(42);
-
-  Song song1(std::move(proto_song));
-  std::string serd = song1.serialize();
-  song1.serialize(std::string("C:\\users\\public\\f1.txt"));
-  SPDLOG_INFO("Serialized first " + serd);
-
-  Song song2 = deserialize(serd);
-  SPDLOG_INFO("Restored and again serd ... what happens: {}", serd);
+msw::model::Song::Song(std::string album, std::string artist, std::string title, std::string fn)
+  : model::Song() {
+  set_album(std::move(album));
+  set_artist(std::move(artist));
+  set_title(std::move(title));
+  set_path(std::move(fn));
 }
 
 void msw::model::Song::set_artist(std::string&& artist) {
@@ -72,15 +69,41 @@ void msw::model::Song::set_path(std::string&& path) {
   reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->set_path(std::move(path));
 }
 
+const std::string& msw::model::Song::artist() const {
+  return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->artist();
+}
+
 const std::string& msw::model::Song::album() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->album();
 }
 
-msw::model::Song msw::model::Song::deserialize(const std::string& contents) {
-  msw_proto_song::Song empty_proto_song;
 
-  std::istringstream istringstr(contents);
-  google::protobuf::io::IstreamInputStream proto_iss(&istringstr);
-  google::protobuf::TextFormat::Parse(&proto_iss, &empty_proto_song);
-  return empty_proto_song;
+//msw::model::Song::operator msw_proto_song::Song&&() {
+//  if (proto_song_containing_optional_) {
+//    return std::move(proto_song_containing_optional_.value());
+//  }
+//  return reinterpret_cast<msw_proto_song::Song&&>(*underlying_object_);
+//}
+
+//void msw::model::Song::take_protobuf_song_out(std::function<void(msw_proto_song::Song*)> receiver) {
+//  receiver(reinterpret_cast<msw_proto_song::Song*>(underlying_object_));
+//  if (proto_song_containing_optional_) {
+//    proto_song_containing_optional_.reset();
+//  }
+//}
+
+msw::model::Song::operator msw_proto_song::Song*() const {
+  return reinterpret_cast<msw_proto_song::Song*>(underlying_object_);
+}
+
+msw::model::Song msw::model::Song::deserialize(const std::string& contents) {
+  return from_string<msw_proto_song::Song>(contents);
+}
+
+bool msw::model::operator==(const Song& lhs, const Song& rhs) {
+  return google::protobuf::util::MessageDifferencer::Equals(*lhs.underlying_object_, *rhs.underlying_object_);
+}
+
+bool msw::model::operator!=(const Song& lhs, const Song& rhs) {
+  return !(lhs == rhs);
 }

@@ -1,5 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
+#include <external/cxxopt.hpp>
+#include <src/win/windows_headers.hpp>
 
 namespace msw::helpers {
 class Utilities {
@@ -45,6 +48,62 @@ public:
     rtrim(s);
     return s;
   }
+};
+
+class CmdParse {
+  static constexpr char BAD_VAL[] = " _-1BbB0q0Qa!qQQQ";
+
+  class ArgcArgv {
+  public:
+    const int argc_;
+    const char** argv_;
+#ifdef _WIN32
+    const std::vector<char> raw_data_{};
+    const std::vector<const char*> pointers_{};
+#endif
+    static ArgcArgv from_wstring(const wchar_t* wins_cmdline);
+  };
+
+  const ArgcArgv argc_argv_;
+  cxxopts::Options options_;
+  const cxxopts::ParseResult result_;
+
+  [[nodiscard]] static cxxopts::Options create_options();
+
+  static void try_get_throw(const std::string& parameter_name, const char* const as_name, const std::exception& thrown_x);
+
+  template <typename T>
+  T try_get(const std::string& parameter_name) const {
+    try {
+      return result_[parameter_name].as<T>();
+    } catch (std::exception& x) {
+      try_get_throw(parameter_name, typeid(T).name(), x);
+      return {};
+    }
+  }
+
+public
+:
+
+  typedef std::tuple<std::string, std::string, std::string, std::string> AsTupleCmdSongItems;
+
+  struct CmdSongItems {
+    std::string album;
+    std::string artist;
+    std::string title;
+    std::string path;
+
+    AsTupleCmdSongItems to_tuple() {
+      return std::make_tuple(std::move(album), std::move(artist), std::move(title), std::move(path));
+    }
+  };
+
+  CmdParse(const int argc, const char** argv);
+#ifdef _WIN32
+  CmdParse(const wchar_t* lpCmdLine);
+#endif
+  [[nodiscard]] bool is_listen() const;
+  [[nodiscard]] CmdSongItems song_data() const;
 };
 
 }

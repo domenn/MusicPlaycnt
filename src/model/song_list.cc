@@ -3,34 +3,38 @@
 
 #include <google/protobuf/text_format.h>
 
-void msw::model::SongList::example_songlists() {
 
-  msw_proto_song::Song proto_song;
-  proto_song.set_album("oneAlbum1");
-  proto_song.set_artist("oneArtist1");
-  proto_song.set_title("TITTELLL!!!! 11");
-  proto_song.set_path("OnePath .... 1");
-  proto_song.set_playcnt(421);
-
-  msw_proto_song::Song proto_song1;
-  proto_song1.set_album("oneAlbum2");
-  proto_song1.set_artist("oneArtist2");
-  proto_song1.set_title("22TITTELLL!!!! 11");
-  proto_song1.set_path("OnePath .... 2");
-  proto_song1.set_playcnt(1421);
-
-  msw_proto_song::Songs my_songs;
-  my_songs.mutable_songs()->Add(std::move(proto_song));
-  my_songs.mutable_songs()->Add(std::move(proto_song1));
-
-  SongList songlist(std::move(my_songs));
-  std::string serd = songlist.serialize();
-  SPDLOG_INFO(serd);
+msw::model::SongList::SongList(msw_proto_song::Songs songs)
+  : msw::Serializable(&songs_),
+    songs_(std::move(songs)) {
 }
+
 std::string msw::model::SongList::serialize() const {
   std::string returning;
   google::protobuf::io::StringOutputStream string_output_stream(&returning);
   google::protobuf::TextFormat::Print(songs_, &string_output_stream);
   return returning;
 }
-msw::model::SongList::SongList(msw_proto_song::Songs  songs) : songs_(std::move(songs)) {}
+
+void msw::model::SongList::make_song_and_add(std::string&& a, std::string&& b, std::string&& c, std::string&& d) {
+  // TODO inefficient impl.
+  templated_add_many(this, Song(a, b, c, d));
+}
+
+msw::model::SongList::SongList(Song&& song)
+  : Serializable(&songs_) {
+  auto* new_song = songs_.add_songs();
+  new_song->operator=(std::move(*song));
+}
+
+msw::model::Song msw::model::SongList::operator[](int idx) {
+  return songs_.mutable_songs()->Mutable(idx);
+}
+
+int msw::model::SongList::size() const {
+  return songs_.songs_size();
+}
+
+//msw::model::SongList::SongList(msw_proto_song::Songs songs)
+//  : songs_(std::move(songs)) {
+//}

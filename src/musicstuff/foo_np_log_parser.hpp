@@ -9,6 +9,7 @@ class AppConfig;
 }
 
 namespace msw::musicstuffs {
+
 class FooNpLogParser {
   const model::AppConfig& app_config_;
 

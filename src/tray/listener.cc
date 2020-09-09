@@ -18,7 +18,6 @@ VOID CALLBACK msw::tray::Listener::my_wait_or_timer_cb(
   UnregisterWait(l->async_change_handle_);
   SPDLOG_INFO("Th: {},{} sending msg to window.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
   l->tray_->send_windows_message(CUSTOM_CHANGE_NOTIFY);
-  SPDLOG_INFO("CB!!!");
 }
 
 msw::tray::Listener::Listener(Tray* tray)

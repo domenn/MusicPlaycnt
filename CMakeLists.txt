@@ -3,9 +3,32 @@ project(musicPlaycnt)
 
 set(CMAKE_CXX_STANDARD 17)
 include_directories(${CMAKE_SOURCE_DIR})
+add_definitions(-DSPDLOG_ACTIVE_LEVEL=1)
+
+# Function:                 EXCLUDE_FILES_FROM_DIR_IN_LIST
+# Description:              Exclude all files from a list under a specific directory.
+# Param _InFileList:        Input and returned List
+# Param _excludeDirName:    Name of the directory, which shall be ignored.
+# Param _verbose:           Print the names of the files handled
+
+FUNCTION (EXCLUDE_FILES_FROM_DIR_IN_LIST _InFileList _excludeDirName _verbose)
+  foreach (ITR ${_InFileList})
+    if ("${_verbose}")
+      message(STATUS "ITR=${ITR}")
+    endif ("${_verbose}")
+    
+    if ("${ITR}" MATCHES "(.*)${_excludeDirName}(.*)")                   # Check if the item matches the directory name in _excludeDirName
+      message(STATUS "Remove Item from List:${ITR}")
+      list (REMOVE_ITEM _InFileList ${ITR})                              # Remove the item from the list
+    endif ("${ITR}" MATCHES "(.*)${_excludeDirName}(.*)")
+  
+  endforeach(ITR)
+  set(SOURCE_FILES ${_InFileList} PARENT_SCOPE)                          # Return the SOURCE_FILES variable to the calling parent
+ENDFUNCTION (EXCLUDE_FILES_FROM_DIR_IN_LIST)
 
 
 if (WIN32)
+  add_definitions(-DSPDLOG_USE_WCHAR=1)
   option(DCPPSOFTWARE_MSVC_JUST_MY_CODE_DEBUGGING "Allow for \"Just my Code\" in Visual Studio." ON)
   if (DCPPSOFTWARE_MSVC_JUST_MY_CODE_DEBUGGING)
     if (NOT ${CMAKE_VERSION} VERSION_LESS "3.15.0")
@@ -37,16 +60,18 @@ endforeach ()
 file(GLOB_RECURSE musicPlaycntSRC LIST_DIRECTORIES false
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Res/*.rc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Res/*.hpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
+
+EXCLUDE_FILES_FROM_DIR_IN_LIST(musicPlaycntSRC .*main.cc 0)
 
 if (MSVC)
-  list(APPEND musicPlaycntSRC ${CMAKE_SOURCE_DIR}/external/StackWalker.cpp)
+  list(APPEND musicPlaycntSRC "${CMAKE_SOURCE_DIR}/external/StackWalker.cpp")
 endif ()
 
 
-add_executable(musicPlaycnt ${musicPlaycntSRC})
+add_executable(musicPlaycnt "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc" "${CMAKE_CURRENT_SOURCE_DIR}/Res/tray.rc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/Res/resource.hpp")
+add_library(codeMusicPlaycnt ${musicPlaycntSRC})
 
 if (WIN32)
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -60,7 +85,7 @@ if (WIN32)
 else ()
 endif (WIN32)
 
-target_include_directories(musicPlaycnt PRIVATE ${CMAKE_SOURCE_DIR}/external/include)
+target_include_directories(codeMusicPlaycnt PUBLIC ${CMAKE_SOURCE_DIR}/external/include)
 
 find_package(fmt CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
@@ -73,7 +98,7 @@ endif ()
 
 
 if (COMMAND protobuf_generate)
-  protobuf_generate(LANGUAGE cpp TARGET musicPlaycnt PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PROTOS
+  protobuf_generate(LANGUAGE cpp TARGET codeMusicPlaycnt PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR} PROTOS
       ${CMAKE_CURRENT_SOURCE_DIR}/src/protobufs/app_config.proto ${CMAKE_CURRENT_SOURCE_DIR}/src/protobufs/songs.proto)
 endif ()
 
@@ -88,7 +113,8 @@ endif ()
 #  message(STATUS "fnd lib: ${platform_folders_DIR}")
 #endif()
 
-target_link_libraries(musicPlaycnt PRIVATE sago::platform_folders spdlog::spdlog protobuf::libprotobuf)
+target_link_libraries(codeMusicPlaycnt PUBLIC sago::platform_folders spdlog::spdlog protobuf::libprotobuf)
+target_link_libraries(musicPlaycnt PUBLIC codeMusicPlaycnt)
 
 # find_path(plog_inc NAMES "plog/Log.h" HINTS ${CMAKE_SOURCE_DIR}/ext/installs/include)
 #message(STATUS ${plog_inc})

@@ -1,6 +1,7 @@
 #include "app_config.hpp"
 #include "src/misc/consts.hpp"
 #include "src/misc/utilities.hpp"
+#include <sago/platform_folders.h>
 
 void msw::model::AppConfig::set_library_path(const std::string& path) { proto_app_config_.set_librarypath(path); }
 
@@ -48,6 +49,13 @@ void msw::model::AppConfig::set_delimiters(std::vector<std::string> delimiters) 
   for (auto&& delimiter : delimiters) {
     proto_app_config_.add_delimiters(std::move(delimiter));
   }
+}
+
+msw::model::AppConfig& msw::model::AppConfig::set_my_defaults() {
+  set_file_to_listen(sago::getMusicFolder() + "/foo_np_log.txt");
+  set_library_path(sago::getMusicFolder() + "/my_music");
+  set_delimiters({";", ": ", " ;; ", " ;; ", " ;;; "});
+  return *this;
 }
 
 std::string msw::model::AppConfig::get_path_to_config_file() {

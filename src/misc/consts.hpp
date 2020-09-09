@@ -10,6 +10,7 @@
 namespace msw::consts {
 
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(PROGRAM_NAME_SHORT, "musicPlaycnt2")
+LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(TESTS_DIR, "musicPlaycnt2__tests")
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(CLI_PROGRAM_DESCTIPTION, "Complicated music tagger and count tracker.")
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(CONFIG_FILENAME, "Playcntv2.config")
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(LISTENER_THREAD_NAME, "ThFileChListn")
@@ -32,13 +33,13 @@ constexpr static wchar_t PROGRAM_NAME_AND_VERSION[] =
 #endif
     L" Build";
 W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(VERSION_HEADER, "About")
-}  // namespace ver
+} // namespace ver
 
 
 namespace win {
 W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(WIN_HEADER_TXT, "TS keep-up remote session printers.")
 W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(WIN_CLASS_NAME, "TsCitricRdcPrintRegistryJdkFixPlaceholdr.")
-}  // namespace win
+} // namespace win
 
 namespace interact {
 W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(MSG_ERROR_HEADER, "Error")
@@ -48,5 +49,24 @@ W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(MSG_OBSERVER_NO_RELEASE, "Observer mode is onl
 W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(MSG_CRASH_UNEXPECTED_EXCEPTION,
                                   "Unexpected exception:\n %1\nApplication will now exit.")
 
-}  // namespace interact
-}  // namespace msw::consts
+} // namespace interact
+namespace cmdoptions {
+#define TOSTR_(x) #x
+#define TO_STR_COMMA(x, y) TOSTR_(x) "," #y
+#define ONE_CMDOPTION_TEXT_CONSTANT(letter, full) \
+      A_LOCALLY_SCOPED_M_CPP_CHAR_CONST(full##_B, TO_STR_COMMA(letter,full)) \
+      A_LOCALLY_SCOPED_M_CPP_CHAR_CONST(full##_SH, #letter) \
+      A_LOCALLY_SCOPED_M_CPP_CHAR_CONST(full##_LO, #full)
+
+ONE_CMDOPTION_TEXT_CONSTANT(l, listen)
+ONE_CMDOPTION_TEXT_CONSTANT(a, album)
+ONE_CMDOPTION_TEXT_CONSTANT(t, title)
+ONE_CMDOPTION_TEXT_CONSTANT(p, path)
+ONE_CMDOPTION_TEXT_CONSTANT(g, artist)
+ONE_CMDOPTION_TEXT_CONSTANT(o, op)
+}
+} // namespace msw::consts
+
+#undef TOSTR_
+#undef TO_STR_COMMA
+#undef ONE_CMDOPTION_TEXT_CONSTANT

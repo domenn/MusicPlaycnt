@@ -76,11 +76,13 @@ void msw::Serializable<proto_t>::serialize_impl(google::protobuf::io::ZeroCopyOu
 msw::Serializable::Serializable(google::protobuf::Message* underlying_object)
   : underlying_object_(underlying_object) {
 }
+
 void msw::Serializable::read_impl(google::protobuf::io::ZeroCopyInputStream& input_stream) {
   if (!google::protobuf::TextFormat::Parse(&input_stream, underlying_object_)) {
     throw msw::exceptions::ApplicationError("Protobuf read failed", MSW_TRACE_ENTRY_CREATE);
   }
 }
+
 template <typename T>
 T msw::Serializable::from_file(std::string const& in_path) {
   T serializable;
@@ -97,6 +99,13 @@ std::string msw::Serializable::serialize(const proto_message_type& msg) {
   return returning;
 }
 
+void msw::Serializable::deserialize_string_impl(const std::string& contents, google::protobuf::Message* msg) {
+  std::istringstream istringstr(contents);
+  google::protobuf::io::IstreamInputStream proto_iss(&istringstr);
+  google::protobuf::TextFormat::Parse(&proto_iss, msg);
+}
+
 template msw::model::AppConfig msw::Serializable::from_file<msw::model::AppConfig>(std::string const& in_path);
-template std::string msw::Serializable::serialize<msw_proto_song::Song>(const msw_proto_song::Song& );
-template std::string msw::Serializable::serialize<msw_proto_song::SongWithMetadata>(const msw_proto_song::SongWithMetadata& );
+template std::string msw::Serializable::serialize<msw_proto_song::Song>(const msw_proto_song::Song&);
+template std::string msw::Serializable::serialize<msw_proto_song::SongWithMetadata>(
+    const msw_proto_song::SongWithMetadata&);

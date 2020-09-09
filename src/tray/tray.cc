@@ -18,7 +18,7 @@ LRESULT Tray::create_menu(Tray* tray) {
     throw MAKE_DIAG_WIN_API_ERR(GetLastError(),
                                 "((CREATESTRUCT*)lParam)->lpCreateParams)");
   }
-  SPDLOG_DEBUG(L"Loading menu from the resource.");
+  SPDLOG_DEBUG("Loading menu from the resource.");
   const auto loaded_menu = LoadMenu(reinterpret_cast<HINSTANCE>(tray->hinstance_),
                                     MAKEINTRESOURCE(APP_MENU_TRAY_RIGHTCLICK));
   tray->menu_to_display_ = GetSubMenu(loaded_menu, 0);
@@ -130,7 +130,7 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
           msw::musicstuffs::FooNpLogParser(get_tray_from_window(hwnd)->config())
         );
         //parsed.serialize(msw::helpers::Utilities::file_in_app_folder("TestingOutput.txt"));
-        
+
         // SPDLOG_INFO("Experimental: it is now {}", parsed.get_song().album());
         SPDLOG_INFO("Experimental: it is now {}", parsed.serialize_to_str());
 
@@ -223,7 +223,9 @@ void Tray::make_window(int n_cmd_show, HICON h_icon) {
 
 void Tray::setup_icon() {
   HICON h_trayicon = LoadIcon(hinstance_, MAKEINTRESOURCE(WRES_ICON_ICO));
-
+  if (!h_trayicon) {
+    throw MAKE_DIAG_WIN_API_ERR(GetLastError(), "LoadIcon");
+  }
   const wchar_t* windowHeader = msw::consts::win::WIN_HEADER_TXTW;
   make_window(SW_HIDE, h_trayicon);
   auto icon_data = create_notifyicondata_structure(h_trayicon);
@@ -233,7 +235,13 @@ void Tray::setup_icon() {
 }
 
 int tray::Tray::run_message_loop() {
-  setup_icon();
+
+  try {
+    setup_icon();
+  } catch (msw::exceptions::ApplicationError const& any) {
+    SPDLOG_CRITICAL("Setup failed: {}", any.what());
+    return -1;
+  }
 
   MSG msg;
   // Step 3: The Message Loop

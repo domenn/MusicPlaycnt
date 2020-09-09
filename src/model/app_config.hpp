@@ -89,6 +89,7 @@ public:
 
   ~AppConfig() = default;
   void set_delimiters(std::vector<std::string> delimiters);
+  AppConfig& set_my_defaults();
 
   static std::string get_path_to_config_file();
   AppConfig(const AppConfig&) = delete;
