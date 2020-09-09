@@ -3,6 +3,7 @@ BasedOnStyle: Google
 #AccessModifierOffset: -2
 #AllowShortIfStatementsOnASingleLine: Never
 ColumnLimit: 120
+# IndentWidth: 2
 #IndentCaseLabels: false
 #SortIncludes: false
 #ConstructorInitializerAllOnOneLineOrOnePerLine: true
@@ -12,5 +13,6 @@ BinPackArguments: false
 # Cpp11BracedListStyle: false
 BinPackParameters: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
+FixNamespaceComments: true
 #AllowShortCaseLabelsOnASingleLine: false
 #AllowShortFunctionsOnASingleLine: Inline

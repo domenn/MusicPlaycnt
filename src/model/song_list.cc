@@ -17,7 +17,7 @@ std::string msw::model::SongList::serialize() const {
 }
 
 void msw::model::SongList::make_song_and_add(std::string&& a, std::string&& b, std::string&& c, std::string&& d) {
-  // TODO inefficient impl.
+  // TODO 3 inefficient impl. ; higher number is lower priority.
   templated_add_many(this, Song(a, b, c, d));
 }
 

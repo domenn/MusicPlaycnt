@@ -97,8 +97,10 @@ public:
   AppConfig(AppConfig&&) noexcept;
 
   void set_library_path(const std::string& path);
+  void set_stored_state(const std::string& path);
   void set_file_to_listen(const std::string& pathFileToListen);
   const std::string& file_to_listen() const;
+  const std::string& stored_state_path() const;
   std::vector<std::string> delimiters() const;
   DelimiterIterable iterate_delimiters() const;
 };

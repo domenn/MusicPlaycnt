@@ -1,17 +1,26 @@
 #include "song_with_metadata.hpp"
 
-void msw::model::SongWithMetadata::set_timestamp_of_action(uint64_t ts) {
-  proto_s_.set_action_timestamp(ts);
+msw::model::SongWithMetadata::SongWithMetadata(SongWithMetadata&& other) noexcept
+  : Serializable(&proto_s_),
+    proto_s_(std::move(other.proto_s_)) {
 }
+
+msw::model::SongWithMetadata& msw::model::SongWithMetadata::operator=(SongWithMetadata&& other) noexcept {
+  proto_s_ = std::move(other.proto_s_);
+  return *this;
+}
+
+void msw::model::SongWithMetadata::set_timestamp_of_action(uint64_t ts) { proto_s_.set_action_timestamp(ts); }
 
 void msw::model::SongWithMetadata::set_action_type(ActionType ty) {
   proto_s_.set_action_type(static_cast<msw_proto_song::SongWithMetadata_ActionType>(ty));
 }
 
-msw::model::Song msw::model::SongWithMetadata::get_song() {
-  return proto_s_.mutable_song();
-}
+msw::model::Song msw::model::SongWithMetadata::get_song() { return proto_s_.mutable_song(); }
 
-std::string msw::model::SongWithMetadata::serialize_to_str() {
-  return serialize(proto_s_);
+std::string msw::model::SongWithMetadata::serialize_to_str() { return serialize(proto_s_); }
+uint64_t msw::model::SongWithMetadata::timestamp() { return proto_s_.action_timestamp(); }
+
+msw::model::ActionType msw::model::SongWithMetadata::action_type() {
+  return static_cast<msw::model::ActionType>(proto_s_.action_type());
 }

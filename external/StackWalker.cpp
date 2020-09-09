@@ -1076,10 +1076,6 @@ BOOL StackWalker::ShowCallstack(HANDLE                    hThread,
       memset(&c, 0, sizeof(CONTEXT));
       c.ContextFlags = USED_CONTEXT_FLAGS;
 
-      // TODO: Detect if you want to get a thread context of a different process, which is running a different processor architecture...
-      // This does only work if we are x64 and the target process is x64 or x86;
-      // It cannot work, if this process is x64 and the target process is x64... this is not supported...
-      // See also: http://www.howzatt.demon.co.uk/articles/DebuggingInWin64.html
       if (GetThreadContext(hThread, &c) == FALSE)
       {
         ResumeThread(hThread);

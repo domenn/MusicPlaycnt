@@ -5,6 +5,8 @@
 #include <src/win/windows_headers.hpp>
 
 namespace msw::helpers {
+class ParseSongItems;
+
 class Utilities {
 public:
   static std::string app_folder();
@@ -70,7 +72,9 @@ class CmdParse {
 
   [[nodiscard]] static cxxopts::Options create_options();
 
-  static void try_get_throw(const std::string& parameter_name, const char* const as_name, const std::exception& thrown_x);
+  static void try_get_throw(const std::string& parameter_name,
+                            const char* const as_name,
+                            const std::exception& thrown_x);
 
   template <typename T>
   T try_get(const std::string& parameter_name) const {
@@ -82,28 +86,12 @@ class CmdParse {
     }
   }
 
-public
-:
-
-  typedef std::tuple<std::string, std::string, std::string, std::string> AsTupleCmdSongItems;
-
-  struct CmdSongItems {
-    std::string album;
-    std::string artist;
-    std::string title;
-    std::string path;
-
-    AsTupleCmdSongItems to_tuple() {
-      return std::make_tuple(std::move(album), std::move(artist), std::move(title), std::move(path));
-    }
-  };
-
+public:
   CmdParse(const int argc, const char** argv);
 #ifdef _WIN32
   CmdParse(const wchar_t* lpCmdLine);
 #endif
   [[nodiscard]] bool is_listen() const;
-  [[nodiscard]] CmdSongItems song_data() const;
+  [[nodiscard]] ParseSongItems song_data() const;
 };
-
 }

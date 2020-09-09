@@ -1,0 +1,494 @@
+From 12fd7c479d6057143cd2b14ed7a8389806e3d8b1 Mon Sep 17 00:00:00 2001
+From: Domen Mori <domen.mory@gmail.com>
+Date: Wed, 9 Sep 2020 21:14:35 +0200
+Subject: [PATCH] solution1
+
+---
+ ReadLineReverse.sln                           |  31 ++++
+ ReadLineReverse/ReadLineReverse.cpp           | 101 +++++++++++
+ ReadLineReverse/ReadLineReverse.h             |  69 ++++++++
+ ReadLineReverse/ReadLineReverse.vcxproj       | 162 ++++++++++++++++++
+ .../ReadLineReverse.vcxproj.filters           |  30 ++++
+ ReadLineReverse/ReadLineReverse.vcxproj.user  |   4 +
+ ReadLineReverse/main.cpp                      |  27 +++
+ 7 files changed, 424 insertions(+)
+ create mode 100644 ReadLineReverse.sln
+ create mode 100644 ReadLineReverse/ReadLineReverse.cpp
+ create mode 100644 ReadLineReverse/ReadLineReverse.h
+ create mode 100644 ReadLineReverse/ReadLineReverse.vcxproj
+ create mode 100644 ReadLineReverse/ReadLineReverse.vcxproj.filters
+ create mode 100644 ReadLineReverse/ReadLineReverse.vcxproj.user
+ create mode 100644 ReadLineReverse/main.cpp
+
+diff --git a/ReadLineReverse.sln b/ReadLineReverse.sln
+new file mode 100644
+index 0000000..dc19062
+--- /dev/null
++++ b/ReadLineReverse.sln
+@@ -0,0 +1,31 @@
++﻿
++Microsoft Visual Studio Solution File, Format Version 12.00
++# Visual Studio Version 16
++VisualStudioVersion = 16.0.30413.136
++MinimumVisualStudioVersion = 10.0.40219.1
++Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReadLineReverse", "ReadLineReverse\ReadLineReverse.vcxproj", "{34AC3395-CA1E-4143-965B-02F56FEB7DCE}"
++EndProject
++Global
++	GlobalSection(SolutionConfigurationPlatforms) = preSolution
++		Debug|x64 = Debug|x64
++		Debug|x86 = Debug|x86
++		Release|x64 = Release|x64
++		Release|x86 = Release|x86
++	EndGlobalSection
++	GlobalSection(ProjectConfigurationPlatforms) = postSolution
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Debug|x64.ActiveCfg = Debug|x64
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Debug|x64.Build.0 = Debug|x64
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Debug|x86.ActiveCfg = Debug|Win32
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Debug|x86.Build.0 = Debug|Win32
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Release|x64.ActiveCfg = Release|x64
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Release|x64.Build.0 = Release|x64
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Release|x86.ActiveCfg = Release|Win32
++		{34AC3395-CA1E-4143-965B-02F56FEB7DCE}.Release|x86.Build.0 = Release|Win32
++	EndGlobalSection
++	GlobalSection(SolutionProperties) = preSolution
++		HideSolutionNode = FALSE
++	EndGlobalSection
++	GlobalSection(ExtensibilityGlobals) = postSolution
++		SolutionGuid = {41FF6CF0-B0F8-46F8-A1B0-4472258A00CC}
++	EndGlobalSection
++EndGlobal
+diff --git a/ReadLineReverse/ReadLineReverse.cpp b/ReadLineReverse/ReadLineReverse.cpp
+new file mode 100644
+index 0000000..2d1d901
+--- /dev/null
++++ b/ReadLineReverse/ReadLineReverse.cpp
+@@ -0,0 +1,101 @@
++#include "ReadLineReverse.h"
++#include <iostream>
++#include <algorithm>
++#include <cassert>
++
++
++
++bool ReadLineReverse::read_some_buffer()
++{
++	file_read_location_ -= LINE_SIZE_STEP;
++	debug_write("buffering ...");
++
++	const auto should_read = static_cast<size_t>
++		(file_read_location_ < 0 ? LINE_SIZE_STEP + file_read_location_ : LINE_SIZE_STEP);
++	if (file_read_location_ < 0) file_read_location_ = 0;
++	if (should_read == 0)
++	{
++		debug_write(" ! buffering TO END .. .ret false ...");
++		return false;
++	}
++	ifstream_.seekg(file_read_location_, std::ios::beg);
++	buffer_.insert(buffer_.begin(), should_read, 0);
++	ifstream_.read(buffer_.data(), should_read);
++	return true;
++}
++
++void ReadLineReverse::find_rightmost_newline()
++{
++	const auto end_newline_where = std::rbegin(buffer_) + 3;
++	const auto end_of_file_nl = std::find(std::rbegin(buffer_), end_newline_where, '\n');
++	if (end_of_file_nl == end_newline_where)
++	{
++		// not found ... insert newline to buffer and retry.
++		buffer_.push_back('\n');
++		find_rightmost_newline();
++		return;
++	}
++	reverse_idx_start_of_line_that_is_to_be_read_next_ = std::distance(std::rbegin(buffer_), end_of_file_nl) - 1;
++	assert(
++		idx_unreverse(reverse_idx_start_of_line_that_is_to_be_read_next_) == 0 ||
++		buffer_[idx_unreverse(reverse_idx_start_of_line_that_is_to_be_read_next_+1)] == '\n');
++}
++
++void ReadLineReverse::advance_indices()
++{
++	const auto stored_reverse_idx_start_of_line_that_is_to_be_read_next =
++		reverse_idx_start_of_line_that_is_to_be_read_next_;
++	if (idx_unreverse(stored_reverse_idx_start_of_line_that_is_to_be_read_next) == 0)
++	{
++		throw std::runtime_error("No more data!");
++	}
++	while (true)
++	{
++		// find next newline
++		auto finding_newline_first_position_reverse = std::rbegin(buffer_) + static_cast<size_t>(
++			stored_reverse_idx_start_of_line_that_is_to_be_read_next + 2);
++		assert(
++			*(finding_newline_first_position_reverse - 1) == '\n' &&
++			"This one must be one to the left of \\n - location where we stop reading. -1 pushes it one to right ... +1 would push it one to left. ");
++		auto it_found_left_newline = std::find(finding_newline_first_position_reverse, std::rend(buffer_), '\n');
++		if (it_found_left_newline == std::rend(buffer_))
++		{
++			const auto moved = read_some_buffer();
++			if (!moved)
++			{
++				reverse_idx_start_of_line_that_is_to_be_read_next_ = idx_unreverse(buffer_, 0);
++				break;
++			}
++		}
++		else
++		{
++			assert(*it_found_left_newline == '\n');
++			debug_calc(calcd_idx_unreverse, idx_unreverse(it_found_left_newline - std::rbegin(buffer_)));
++			debug_write(calcd_idx_unreverse);
++			assert(idx_unreverse(it_found_left_newline - std::rbegin(buffer_)) >= 0);
++			assert(buffer_[idx_unreverse(it_found_left_newline - std::rbegin(buffer_))]== '\n');
++			reverse_idx_start_of_line_that_is_to_be_read_next_ =
++				it_found_left_newline - std::rbegin(buffer_) - 1;
++			assert(buffer_[ idx_unreverse(reverse_idx_start_of_line_that_is_to_be_read_next_)-1]== '\n');
++			break;
++		}
++	}
++	reverse_idx_newline_to_the_right_of_to_read_ = stored_reverse_idx_start_of_line_that_is_to_be_read_next + 1;
++	assert(buffer_[idx_unreverse(reverse_idx_newline_to_the_right_of_to_read_)] == '\n');
++}
++
++std::string ReadLineReverse::next()
++{
++	advance_indices();
++
++	auto idx_r = idx_unreverse(buffer_, static_cast<size_t>(reverse_idx_newline_to_the_right_of_to_read_));
++	if (*(buffer_.begin() + idx_r - 1) == '\r')
++	{
++		-- idx_r;
++	}
++	const auto idx_left = idx_unreverse(buffer_, static_cast<size_t>(reverse_idx_start_of_line_that_is_to_be_read_next_
++	                                    ));
++	assert(idx_r >= idx_left);
++
++	return std::string(buffer_.begin() + idx_left, buffer_.begin() + idx_r);
++}
+diff --git a/ReadLineReverse/ReadLineReverse.h b/ReadLineReverse/ReadLineReverse.h
+new file mode 100644
+index 0000000..f46a8f5
+--- /dev/null
++++ b/ReadLineReverse/ReadLineReverse.h
+@@ -0,0 +1,69 @@
++#pragma once
++#include <fstream>
++#include <vector>
++#include <iostream>
++
++template <typename T>
++inline void debug_write(const T a)
++{
++#ifndef _NDEBUG
++	std::cout << a << std::endl;
++#endif
++}
++
++#ifndef _NDEBUG
++#define debug_calc(var1, expr) const auto var1 = [&](){return (expr) ; }()
++
++#else
++#define debug_calc(var1, expr)
++#endif
++
++class ReadLineReverse
++{
++	std::ifstream ifstream_;
++
++	constexpr static int LINE_SIZE_STEP = 250;
++	std::vector<char> buffer_;
++
++
++	int64_t reverse_idx_start_of_line_that_is_to_be_read_next_{};
++	int64_t reverse_idx_newline_to_the_right_of_to_read_{};
++	// size_t file_size_;
++	int64_t file_read_location_;
++
++	bool read_some_buffer();
++
++	template <typename t_container, typename number_type>
++	static number_type idx_unreverse(const t_container& cont, number_type item)
++	{
++		const auto right = static_cast<number_type>(cont.size() - 1);
++		return right - item;
++	}
++
++	template <typename number_type>
++	number_type idx_unreverse(number_type item)
++	{
++		return idx_unreverse(buffer_, item);
++	}
++
++	void find_rightmost_newline();
++	void advance_indices();
++public:
++
++
++	ReadLineReverse(std::ifstream ifstream):
++		ifstream_(std::move(ifstream))
++	{
++		buffer_.reserve(LINE_SIZE_STEP + 1);
++		ifstream_.seekg(0, std::ios_base::end);
++		// file_size_ = ifstream_.tellg();
++		file_read_location_ = static_cast<int64_t>(ifstream_.tellg());
++
++		read_some_buffer();
++
++		// Newline at end?
++		find_rightmost_newline();
++	}
++
++	std::string next();
++};
+diff --git a/ReadLineReverse/ReadLineReverse.vcxproj b/ReadLineReverse/ReadLineReverse.vcxproj
+new file mode 100644
+index 0000000..fc6db07
+--- /dev/null
++++ b/ReadLineReverse/ReadLineReverse.vcxproj
+@@ -0,0 +1,162 @@
++<?xml version="1.0" encoding="utf-8"?>
++<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
++  <ItemGroup Label="ProjectConfigurations">
++    <ProjectConfiguration Include="Debug|Win32">
++      <Configuration>Debug</Configuration>
++      <Platform>Win32</Platform>
++    </ProjectConfiguration>
++    <ProjectConfiguration Include="Release|Win32">
++      <Configuration>Release</Configuration>
++      <Platform>Win32</Platform>
++    </ProjectConfiguration>
++    <ProjectConfiguration Include="Debug|x64">
++      <Configuration>Debug</Configuration>
++      <Platform>x64</Platform>
++    </ProjectConfiguration>
++    <ProjectConfiguration Include="Release|x64">
++      <Configuration>Release</Configuration>
++      <Platform>x64</Platform>
++    </ProjectConfiguration>
++  </ItemGroup>
++  <PropertyGroup Label="Globals">
++    <VCProjectVersion>16.0</VCProjectVersion>
++    <ProjectGuid>{34ac3395-ca1e-4143-965b-02f56feb7dce}</ProjectGuid>
++    <RootNamespace>ReadLineReverse</RootNamespace>
++    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
++  </PropertyGroup>
++  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
++    <ConfigurationType>Application</ConfigurationType>
++    <UseDebugLibraries>true</UseDebugLibraries>
++    <PlatformToolset>v142</PlatformToolset>
++    <CharacterSet>Unicode</CharacterSet>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
++    <ConfigurationType>Application</ConfigurationType>
++    <UseDebugLibraries>false</UseDebugLibraries>
++    <PlatformToolset>v142</PlatformToolset>
++    <WholeProgramOptimization>true</WholeProgramOptimization>
++    <CharacterSet>Unicode</CharacterSet>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
++    <ConfigurationType>Application</ConfigurationType>
++    <UseDebugLibraries>true</UseDebugLibraries>
++    <PlatformToolset>v142</PlatformToolset>
++    <CharacterSet>Unicode</CharacterSet>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
++    <ConfigurationType>Application</ConfigurationType>
++    <UseDebugLibraries>false</UseDebugLibraries>
++    <PlatformToolset>v142</PlatformToolset>
++    <WholeProgramOptimization>true</WholeProgramOptimization>
++    <CharacterSet>Unicode</CharacterSet>
++  </PropertyGroup>
++  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
++  <ImportGroup Label="ExtensionSettings">
++  </ImportGroup>
++  <ImportGroup Label="Shared">
++  </ImportGroup>
++  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
++    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++  </ImportGroup>
++  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
++    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++  </ImportGroup>
++  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
++    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++  </ImportGroup>
++  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
++    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
++  </ImportGroup>
++  <PropertyGroup Label="UserMacros" />
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
++    <LinkIncremental>true</LinkIncremental>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
++    <LinkIncremental>true</LinkIncremental>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
++    <LinkIncremental>false</LinkIncremental>
++  </PropertyGroup>
++  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
++    <LinkIncremental>false</LinkIncremental>
++  </PropertyGroup>
++  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
++    <ClCompile>
++      <WarningLevel>Level3</WarningLevel>
++      <SDLCheck>true</SDLCheck>
++      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <ConformanceMode>true</ConformanceMode>
++      <LanguageStandard>stdcpp17</LanguageStandard>
++      <MultiProcessorCompilation>true</MultiProcessorCompilation>
++      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
++    </ClCompile>
++    <Link>
++      <SubSystem>Console</SubSystem>
++      <GenerateDebugInformation>true</GenerateDebugInformation>
++    </Link>
++  </ItemDefinitionGroup>
++  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
++    <ClCompile>
++      <WarningLevel>Level3</WarningLevel>
++      <SDLCheck>true</SDLCheck>
++      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <ConformanceMode>true</ConformanceMode>
++      <LanguageStandard>stdcpp17</LanguageStandard>
++      <MultiProcessorCompilation>true</MultiProcessorCompilation>
++      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
++    </ClCompile>
++    <Link>
++      <SubSystem>Console</SubSystem>
++      <GenerateDebugInformation>true</GenerateDebugInformation>
++    </Link>
++  </ItemDefinitionGroup>
++  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
++    <ClCompile>
++      <WarningLevel>Level3</WarningLevel>
++      <FunctionLevelLinking>true</FunctionLevelLinking>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <SDLCheck>true</SDLCheck>
++      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <ConformanceMode>true</ConformanceMode>
++      <LanguageStandard>stdcpp17</LanguageStandard>
++      <MultiProcessorCompilation>true</MultiProcessorCompilation>
++      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
++    </ClCompile>
++    <Link>
++      <SubSystem>Console</SubSystem>
++      <EnableCOMDATFolding>true</EnableCOMDATFolding>
++      <OptimizeReferences>true</OptimizeReferences>
++      <GenerateDebugInformation>true</GenerateDebugInformation>
++    </Link>
++  </ItemDefinitionGroup>
++  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
++    <ClCompile>
++      <WarningLevel>Level3</WarningLevel>
++      <FunctionLevelLinking>true</FunctionLevelLinking>
++      <IntrinsicFunctions>true</IntrinsicFunctions>
++      <SDLCheck>true</SDLCheck>
++      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
++      <ConformanceMode>true</ConformanceMode>
++      <LanguageStandard>stdcpp17</LanguageStandard>
++      <MultiProcessorCompilation>true</MultiProcessorCompilation>
++      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
++    </ClCompile>
++    <Link>
++      <SubSystem>Console</SubSystem>
++      <EnableCOMDATFolding>true</EnableCOMDATFolding>
++      <OptimizeReferences>true</OptimizeReferences>
++      <GenerateDebugInformation>true</GenerateDebugInformation>
++    </Link>
++  </ItemDefinitionGroup>
++  <ItemGroup>
++    <ClCompile Include="main.cpp" />
++    <ClCompile Include="ReadLineReverse.cpp" />
++  </ItemGroup>
++  <ItemGroup>
++    <ClInclude Include="ReadLineReverse.h" />
++  </ItemGroup>
++  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
++  <ImportGroup Label="ExtensionTargets">
++  </ImportGroup>
++</Project>
+\ No newline at end of file
+diff --git a/ReadLineReverse/ReadLineReverse.vcxproj.filters b/ReadLineReverse/ReadLineReverse.vcxproj.filters
+new file mode 100644
+index 0000000..c3f7e15
+--- /dev/null
++++ b/ReadLineReverse/ReadLineReverse.vcxproj.filters
+@@ -0,0 +1,30 @@
++﻿<?xml version="1.0" encoding="utf-8"?>
++<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
++  <ItemGroup>
++    <Filter Include="Source Files">
++      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
++      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
++    </Filter>
++    <Filter Include="Header Files">
++      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
++      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
++    </Filter>
++    <Filter Include="Resource Files">
++      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
++      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
++    </Filter>
++  </ItemGroup>
++  <ItemGroup>
++    <ClCompile Include="main.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
++    <ClCompile Include="ReadLineReverse.cpp">
++      <Filter>Source Files</Filter>
++    </ClCompile>
++  </ItemGroup>
++  <ItemGroup>
++    <ClInclude Include="ReadLineReverse.h">
++      <Filter>Header Files</Filter>
++    </ClInclude>
++  </ItemGroup>
++</Project>
+\ No newline at end of file
+diff --git a/ReadLineReverse/ReadLineReverse.vcxproj.user b/ReadLineReverse/ReadLineReverse.vcxproj.user
+new file mode 100644
+index 0000000..88a5509
+--- /dev/null
++++ b/ReadLineReverse/ReadLineReverse.vcxproj.user
+@@ -0,0 +1,4 @@
++﻿<?xml version="1.0" encoding="utf-8"?>
++<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
++  <PropertyGroup />
++</Project>
+\ No newline at end of file
+diff --git a/ReadLineReverse/main.cpp b/ReadLineReverse/main.cpp
+new file mode 100644
+index 0000000..bf0d756
+--- /dev/null
++++ b/ReadLineReverse/main.cpp
+@@ -0,0 +1,27 @@
++#include "ReadLineReverse.h"
++#include <iostream>
++
++int main(int argc, char** argv)
++{
++	ReadLineReverse r(std::ifstream(
++		"C:/Users/Domen/Everything/complicated_music_tools/foobarLogger/nplogDbgDeving.txt",
++
++		std::ios::binary));
++
++	for (int i = 0; i < 50; ++i)
++	{
++		auto result = "LN: \"" + r.next() + "\"";
++		std::cout << result << std::endl;
++	}
++
++
++	return 0;
++}
++
++
++// Situation 1: - normal - there is newline in the range of read-chunk-size ( 2 newlines )
++// Situation 2: - normal - there is NO newline in the range of read-chunk-size; We need to load more into buffer
++// Situation 3: - first read - 0 newlines
++// Situation 4: - first read - only one newline - we must read whole file
++// Situation 5: - very long file - ony one newline ... we read as multiple chunks and return whole file.
++// we open file that has 0 newlines in sight
+-- 
+2.28.0.windows.1
+

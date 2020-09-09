@@ -62,6 +62,10 @@ file(GLOB_RECURSE musicPlaycntSRC LIST_DIRECTORIES false
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h")
 
+file(GLOB_RECURSE musicPlaycntExeOnlySRC LIST_DIRECTORIES false
+    "${CMAKE_CURRENT_SOURCE_DIR}/exe_only_src/*.cc"
+    "${CMAKE_CURRENT_SOURCE_DIR}/exe_only_src/*.hpp")
+
 EXCLUDE_FILES_FROM_DIR_IN_LIST(musicPlaycntSRC .*main.cc 0)
 
 if (MSVC)
@@ -70,7 +74,8 @@ endif ()
 
 
 add_executable(musicPlaycnt "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc" "${CMAKE_CURRENT_SOURCE_DIR}/Res/tray.rc"
-    "${CMAKE_CURRENT_SOURCE_DIR}/Res/resource.hpp")
+    "${CMAKE_CURRENT_SOURCE_DIR}/Res/resource.hpp" ${musicPlaycntExeOnlySRC}
+    )
 add_library(codeMusicPlaycnt ${musicPlaycntSRC})
 
 if (WIN32)

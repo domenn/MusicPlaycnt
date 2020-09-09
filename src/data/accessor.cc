@@ -4,29 +4,36 @@
 #include <src/model/song_with_metadata.hpp>
 
 template <typename T>
-msw::data::Accessor<T>::Accessor(void* data,
-                                 std::function<void(void*, T*)> persist_function,
-                                 std::function<std::unique_ptr<T>(void*)> initial_load_function)
-  : data_(data),
-    persist_function_(std::move(persist_function)),
-    initial_load_function_(std::move(initial_load_function)) {
+msw::data::Accessor<T>::Accessor(void* data)
+//   : data_(data)
+{
 }
 
 template <typename T>
 void msw::data::Accessor<T>::write(std::function<void(T*)> mutator) {
   if (!item_) {
-    item_ = initial_load_function_(data_);
+    item_ = initial_load_function();
   }
   mutator(item_.get());
-  persist_function_(data_, item_.get());
+  persist(item_.get());
 }
 
 template <typename T>
 T* msw::data::Accessor<T>::read() {
   if (!item_) {
-    item_ = initial_load_function_(data_);
+    item_ = initial_load_function();
   }
   return item_.get();
+}
+
+template <typename T>
+void msw::data::Accessor<T>::replace(T* replacement_item) {
+  if (!item_) {
+    item_ = std::make_unique<T>(std::move(*replacement_item));
+  }else {
+    *item_ = std::move(*replacement_item);
+  }
+  persist(item_.get());
 }
 
 template class msw::data::Accessor<msw::model::SongList>;

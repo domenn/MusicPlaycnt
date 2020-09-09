@@ -5,6 +5,7 @@
 #include <sago/platform_folders.h>
 #include "consts.hpp"
 #include "src/win/encoding.hpp"
+#include "src/model/song.hpp"
 
 #ifdef _WIN32
 #include <shellapi.h>
@@ -189,10 +190,10 @@ bool msw::helpers::CmdParse::is_listen() const {
   return result_[co::listen_LO].as<bool>();
 }
 
-msw::helpers::CmdParse::CmdSongItems msw::helpers::CmdParse::song_data() const {
+msw::helpers::ParseSongItems msw::helpers::CmdParse::song_data() const {
   return {
-      try_get<std::string>(co::album_LO),
       try_get<std::string>(co::artist_LO),
+    try_get<std::string>(co::album_LO),
       try_get<std::string>(co::title_LO),
       try_get<std::string>(co::path_LO)};
 }

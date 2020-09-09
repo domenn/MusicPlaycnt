@@ -1,14 +1,12 @@
+#include <sago/platform_folders.h>
+
+#include <exe_only_src/production_accessor.hpp>
 #include <external/cxxopt.hpp>
+#include <fstream>
+#include <src/data/pointers_to_globals.hpp>
 #include <src/misc/consts.hpp>
 #include <src/model/song.hpp>
 #include <src/win/windows_headers.hpp>
-//#ifdef _WIN32
-//#include <shellapi.h>
-//#endif
-
-#include <sago/platform_folders.h>
-
-#include <fstream>
 
 #include "misc/spd_logging.hpp"
 #include "misc/utilities.hpp"
@@ -17,12 +15,11 @@
 #include "tray/listener.hpp"
 #include "tray/tray.hpp"
 #include "win/winapi_exceptions.hpp"
-#include <src/data/pointers_to_globals.hpp>
 
 namespace msw::pg {
 data::Accessor<msw::model::SongList>* song_list;
 data::Accessor<msw::model::SongWithMetadata>* handled_song;
-}
+}  // namespace msw::pg
 
 msw::model::AppConfig get_or_create_config() {
   try {
@@ -39,20 +36,20 @@ msw::model::AppConfig get_or_create_config() {
     throw;
   }
 }
-
 #ifdef _WIN32
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
+int WINAPI wWinMain(_In_ HINSTANCE hInstance,
+                    _In_opt_ HINSTANCE hPrevInstance,
+                    _In_ LPWSTR lpCmdLine,
+                    _In_ int nShowCmd) {
   SetConsoleOutputCP(CP_UTF8);
 #else
 int main(int argc, char** argv) {
 #endif
   spdl::spdlog_setup(spdl::SpdlogConfig::build()
-                     .default_logger_name("NewMusicTrackerCounter")
-                     .file_name("NewMusicTrackerCounter.log")
-                     .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
-                     .log_to_file(true));
-
-  // msw::pg::provider = 
+                         .default_logger_name("NewMusicTrackerCounter")
+                         .file_name("NewMusicTrackerCounter.log")
+                         .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
+                         .log_to_file(true));
 #ifdef _DLL
   SetThreadDescription(GetCurrentThread(), L"MainThread");
 #endif
@@ -62,12 +59,16 @@ int main(int argc, char** argv) {
   msw::helpers::CmdParse cmd_parse(argc, argv);
 #endif
   auto cfg = get_or_create_config();
+
+  msw::data::ProductionAccessor<msw::model::SongWithMetadata> inst_handled_song(cfg, cfg.stored_state_path());
+  msw::pg::handled_song = &inst_handled_song;
+
   if (cmd_parse.is_listen()) {
     msw::tray::Tray main_tray(hInstance, cfg);
 
     return main_tray.run_message_loop();
   }
-
+  // todo 2 Here I can get song .. and call the procedure (that is otherwise taken care inside message_loop).
   SPDLOG_INFO(cmd_parse.song_data().artist);
 
   return 0;
@@ -75,26 +76,33 @@ int main(int argc, char** argv) {
 
 std::string msw::helpers::Utilities::app_folder() { return sago::getConfigHome() + '/' + consts::PROGRAM_NAME_SHORT; }
 
-std::string msw::musicstuffs::FooNpLogParser::extract_last_line() const {
-  constexpr int LINE_SIZE_STEP = 150;
+std::string msw::musicstuffs::FooNpLogParser::LineGetter::next() {
   constexpr int LINES_TO_READ = 2;
-  std::ifstream source(app_config_.file_to_listen(), std::ios::binary);
-  source.seekg(0, std::ios_base::end);
-  size_t size = static_cast<size_t>(source.tellg());
-  std::vector<char> buffer;
+  ifstream_.seekg(0, std::ios_base::end);
+  size_t size = static_cast<size_t>(ifstream_.tellg());
   int newlineCount = 0;
-  while (source && buffer.size() != size && newlineCount < LINES_TO_READ) {
-    buffer.resize(std::min(buffer.size() + LINE_SIZE_STEP, size));
-    source.seekg(-static_cast<std::streamoff>(buffer.size()), std::ios_base::end);
-    source.read(buffer.data(), buffer.size());
-    newlineCount = std::count(buffer.begin(), buffer.end(), '\n');
+  while (ifstream_ && buffer_.size() != size && newlineCount < LINES_TO_READ) {
+    buffer_.resize(std::min(buffer_.size() + LINE_SIZE_STEP, size));
+    ifstream_.seekg(-static_cast<std::streamoff>(buffer_.size()), std::ios_base::end);
+    ifstream_.read(buffer_.data(), buffer_.size());
+    newlineCount = std::count(buffer_.begin(), buffer_.end(), '\n');
   }
 
-  auto rightmost_newline = std::next(std::find(buffer.rbegin(), buffer.rend(), '\n'));
-  if (std::distance(buffer.rbegin(), rightmost_newline) > 3) {
+  auto rightmost_newline = std::next(std::find(buffer_.rbegin(), buffer_.rend(), '\n'));
+  if (std::distance(buffer_.rbegin(), rightmost_newline) > 3) {
     // no newline at the end
-    return {rightmost_newline.base() + 1, buffer.end()};
-            }
-            auto next_newline = std::find(rightmost_newline, buffer.rend(), '\n');
-            return std::string(next_newline.base(), rightmost_newline.base());
-            }
+    return {rightmost_newline.base() + 1, buffer_.end()};
+  }
+  auto next_newline = std::find(rightmost_newline, buffer_.rend(), '\n');
+  return std::string(next_newline.base(), rightmost_newline.base());
+}
+
+msw::musicstuffs::FooNpLogParser::LineGetter::LineGetter(std::ifstream ifstream1) : ifstream_(std::move(ifstream1)) {
+  buffer_.reserve(LINE_SIZE_STEP + 1);
+  ifstream_.seekg(0, std::ios_base::end);
+  file_size_ = ifstream_.tellg();
+}
+
+msw::musicstuffs::FooNpLogParser::LineGetter msw::musicstuffs::FooNpLogParser::lines() const {
+  return std::ifstream(app_config_.file_to_listen(), std::ios::binary);
+}

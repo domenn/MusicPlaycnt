@@ -5,12 +5,18 @@
 
 void msw::model::AppConfig::set_library_path(const std::string& path) { proto_app_config_.set_librarypath(path); }
 
+void msw::model::AppConfig::set_stored_state(const std::string& path) { proto_app_config_.set_storedstate(path); }
+
 void msw::model::AppConfig::set_file_to_listen(const std::string& pathFileToListen) {
   proto_app_config_.set_filetolisten(pathFileToListen);
 }
 
 const std::string& msw::model::AppConfig::file_to_listen() const {
   return proto_app_config_.filetolisten();
+}
+
+const std::string& msw::model::AppConfig::stored_state_path() const {
+  return proto_app_config_.storedstate();
 }
 
 std::vector<std::string> msw::model::AppConfig::delimiters() const {
@@ -55,6 +61,7 @@ msw::model::AppConfig& msw::model::AppConfig::set_my_defaults() {
   set_file_to_listen(sago::getMusicFolder() + "/foo_np_log.txt");
   set_library_path(sago::getMusicFolder() + "/my_music");
   set_delimiters({";", ": ", " ;; ", " ;; ", " ;;; "});
+  set_stored_state(msw::helpers::Utilities::file_in_app_folder(msw::consts::DEFAULT_STATE_FILE_NAME));
   return *this;
 }
 

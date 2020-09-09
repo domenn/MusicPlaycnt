@@ -8,6 +8,7 @@
 #include "src/misc/utilities.hpp"
 #include "src/model/app_config.hpp"
 #include "src/musicstuff/foo_np_log_parser.hpp"
+#include "src/musicstuff/do_things.hpp"
 
 using namespace msw;
 using namespace tray;
@@ -126,13 +127,9 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         get_tray_from_window(hwnd)->on_exit();
       case CUSTOM_CHANGE_NOTIFY:
         SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
-        msw::model::SongWithMetadata parsed = static_cast<msw::model::SongWithMetadata>(
-          msw::musicstuffs::FooNpLogParser(get_tray_from_window(hwnd)->config())
-        );
-        //parsed.serialize(msw::helpers::Utilities::file_in_app_folder("TestingOutput.txt"));
-
-        // SPDLOG_INFO("Experimental: it is now {}", parsed.get_song().album());
-        SPDLOG_INFO("Experimental: it is now {}", parsed.serialize_to_str());
+        do_things::new_song_happened(
+            static_cast<msw::model::SongWithMetadata>(msw::musicstuffs::FooNpLogParser(
+                get_tray_from_window(hwnd)->config())));
 
         get_tray_from_window(hwnd)->listener_.listen();
         return 0;

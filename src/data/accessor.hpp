@@ -5,26 +5,25 @@
 
 namespace msw::data {
 
-template <typename T>
+template <typename T_item>
 class Accessor {
 
-  std::unique_ptr<T> item_;
+  std::unique_ptr<T_item> item_;
+  // NOTE: Probably useless. In phase of phasing out.
+  // void* data_;
 
-  void* data_;
-  std::function<void(void*, T*)> persist_function_;
-  std::function<std::unique_ptr<T>(void*)> initial_load_function_;
-
+  virtual std::unique_ptr<T_item> initial_load_function()= 0;
+  virtual void persist(T_item* item) = 0;
 
 public:
-  Accessor(void* data,
-           std::function<void(void*, T*)> persist_function,
-           std::function<std::unique_ptr<T>(void*)> initial_load_function);
+  explicit Accessor(void* data);
+  virtual ~Accessor() = default;
 
-  void write(std::function<void(T*)> mutator);
-  T* read();
+  void write(std::function<void(T_item*)> mutator);
+  T_item* read();
 
-  void* data() const { return data_; }
-
+  // void* data() const { return data_; }
+  void replace(T_item* replacement_item);
 
   //  virtual msw::model::SongWithMetadata working_item();
   //  virtual void persist();

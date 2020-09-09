@@ -31,10 +31,15 @@ google::protobuf::io::FileOutputStream msw::Serializable::open_file_for_writing(
   auto [new_file, my_errno] =
       cp_open_lw(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, get_wr_pmode(), OpenModeWin::BINARY);
   if (new_file == -1) {
+#ifdef _WIN32
+    using thrown_e = msw::exceptions::WinApiError;
+#else
+    using thrown_e = msw::exceptions::ErrorCode;
+#endif
+    throw thrown_e(my_errno,
+                   M_PROTOBUF_OPEN_FILE_IMPL,
+                   {__LINE__, __FUNCTION__, __FILE__});
 
-    throw msw::exceptions::ErrorCode(my_errno,
-                                     M_PROTOBUF_OPEN_FILE_IMPL,
-                                     {__LINE__, __FUNCTION__, __FILE__});
   }
   return google::protobuf::io::FileOutputStream(new_file);
 }
