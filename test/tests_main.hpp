@@ -1,37 +1,31 @@
 #pragma once
 
-#include <src/win/windows_headers.hpp>
-#include <src/misc/spd_logging.hpp>
-
-
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
-#include "src/model/song_list.hpp"
-#include "src/model/song.hpp"
-#include "util/string_provider.hpp"
-#include "src/misc/utilities.hpp"
-#include "src/win/winapi_exceptions.hpp"
-#include "src/musicstuff/foo_np_log_parser.hpp"
-#include "src/model/app_config.hpp"
+
+#include <src/misc/spd_logging.hpp>
+#include <src/win/windows_headers.hpp>
+
+#include <src/misc/utilities.hpp>
+#include <src/model/app_config.hpp>
+#include <src/model/song.hpp>
+#include <src/model/song_list.hpp>
+#include <src/musicstuff/foo_np_log_parser.hpp>
+#include <src/win/winapi_exceptions.hpp>
+#include <test/util/string_provider.hpp>
 
 using namespace std::string_literals;
 using Song = msw::model::Song;
 using SongList = msw::model::SongList;
 
 class MockFooNpLogParser : public msw::musicstuffs::FooNpLogParser {
-
-public:
+ public:
   const std::string line_to_parse_;
 
   MockFooNpLogParser(const msw::model::AppConfig& app_config, std::string line_to_parse)
-    : FooNpLogParser(app_config),
-      line_to_parse_(std::move(line_to_parse)) {
-  }
+      : FooNpLogParser(app_config), line_to_parse_(std::move(line_to_parse)) {}
 };
 
-
-class FoobarLineParse : public testing::TestWithParam<std::pair<std::string, std::string>> {
-};
+class FoobarLineParse : public testing::TestWithParam<std::pair<std::string, std::string>> {};
 
 TEST_P(FoobarLineParse, emptyStringsCmd) {
   const auto& param_pair = GetParam();
@@ -42,22 +36,19 @@ TEST_P(FoobarLineParse, emptyStringsCmd) {
   ASSERT_EQ(smd.get_song().album(), param_pair.second);
 }
 
-INSTANTIATE_TEST_SUITE_P(TestFoobarLineParse,
-                         FoobarLineParse,
-                         testing::Values(
-                           std::make_pair(
-                             "Tue Sep 08 12:19:02 2020;playing: Dragony ;; Masters Of The Multiverse ;; Evermore ;;; C:\\pathTo.mp3"s
-                             ,"Masters Of The Multiverse"s),
-                           std::make_pair(
-                             "Tue Sep 08 13:36:15 2020;playing: ? ;; ? ;; Evermore ;;; C:\\pathTo.mp3"s
-                             ,""s),
-                           std::make_pair(
-                             "Tue Sep 08 13:36:15 2020;playing:  ;;  ;; Evermore ;;; C:\\pathTo.mp3"s
-                             ,""s),
-                           std::make_pair(
-                             "Tue Sep 08 13:36:15 2020;playing:   ;;   ;; Evermore ;;; C:\\pathTo.mp3"s
-                             ," "s)
-                         ));
+INSTANTIATE_TEST_SUITE_P(
+    TestFoobarLineParse,
+    FoobarLineParse,
+    testing::Values(
+        std::make_pair(
+            "Tue Sep 08 12:19:02 2020;playing: Dragony ;; Masters Of The Multiverse ;; Evermore ;;; C:\\pathTo.mp3"s,
+            "Masters Of The Multiverse"s),
+        std::make_pair("Tue Sep 08 13:36:15 2020;playing: ? ;; ? ;; Evermore ;;; C:\\pathTo.mp3"s, ""s),
+        std::make_pair("Tue Sep 08 13:36:15 2020;playing:  ;;  ;; Evermore ;;; C:\\pathTo.mp3"s, ""s),
+        std::make_pair("Tue Sep 08 13:36:15 2020;playing:   ;;   ;; Evermore ;;; C:\\pathTo.mp3"s, " "s),
+        std::make_pair("Tue Sep 09 16:22:11 2020;playing: a ;; b ;; c ;;; d\nTue Sep 10 11:23:47 2020;stopped: e ;; f ;; g ;;; h"s, "b"s),
+        std::make_pair("Tue Sep 09 16:22:11 2020;playing: a ;; b ;; c ;;; d\nTue Sep 10 11:23:47 2020;paused: e ;; f ;; g ;;; h"s, "f"s)
+    ));
 
 TEST(Fundamental, createSaveAndRestore) {
   msw_proto_song::Song proto_song;
@@ -82,9 +73,7 @@ TEST(Interface, addOneSong) {
   ASSERT_EQ(single_sl[0].album(), "1");
 }
 
-TEST(Interface, addTwoSongs) {
-  ASSERT_EQ(SongList(Song{"1", "2", "3", "4"},Song{"5", "6", "7", "8"}).size(), 2);
-}
+TEST(Interface, addTwoSongs) { ASSERT_EQ(SongList(Song{"1", "2", "3", "4"}, Song{"5", "6", "7", "8"}).size(), 2); }
 
 TEST(Interface, addThreeSongs) {
   msw::StringProvider sp;
@@ -124,16 +113,15 @@ TEST(Cli, everythingBasic) {
 }
 
 TEST(Cli, emptyAlbum) {
-  msw::helpers::CmdParse cmd_parse(
-      L"swName --artist 1 --album   \"\" --title ßtrangeTitleš --path C:\\one\\two");
+  msw::helpers::CmdParse cmd_parse(L"swName --artist 1 --album   \"\" --title ßtrangeTitleš --path C:\\one\\two");
   Song a_song = std::make_from_tuple<Song>(cmd_parse.song_data().to_tuple());
   ASSERT_EQ("", a_song.album());
 }
 
-//class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {
+// class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {
 //};
 //
-//TEST_P(CliMissingSongItems, emptyStringsCmd) {
+// TEST_P(CliMissingSongItems, emptyStringsCmd) {
 //  msw::helpers::CmdParse missing_album(GetParam());
 //  ASSERT_THROW(
 //      std::make_from_tuple<Song>(missing_album.song_data().to_tuple()),
@@ -141,7 +129,7 @@ TEST(Cli, emptyAlbum) {
 //      );
 //}
 //
-//INSTANTIATE_TEST_SUITE_P(CliMissingSongItemsEmptyStringCmd,
+// INSTANTIATE_TEST_SUITE_P(CliMissingSongItemsEmptyStringCmd,
 //                         CliMissingSongItems,
 //                         testing::Values(
 //                           L"swName --artist a1 --album --title ŠžTi --path C:\\q",

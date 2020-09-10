@@ -19,7 +19,7 @@
 namespace msw::pg {
 data::Accessor<msw::model::SongList>* song_list;
 data::Accessor<msw::model::SongWithMetadata>* handled_song;
-}  // namespace msw::pg
+} // namespace msw::pg
 
 msw::model::AppConfig get_or_create_config() {
   try {
@@ -36,6 +36,7 @@ msw::model::AppConfig get_or_create_config() {
     throw;
   }
 }
+
 #ifdef _WIN32
 int WINAPI wWinMain(_In_ HINSTANCE hInstance,
                     _In_opt_ HINSTANCE hPrevInstance,
@@ -46,10 +47,10 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 int main(int argc, char** argv) {
 #endif
   spdl::spdlog_setup(spdl::SpdlogConfig::build()
-                         .default_logger_name("NewMusicTrackerCounter")
-                         .file_name("NewMusicTrackerCounter.log")
-                         .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
-                         .log_to_file(true));
+                     .default_logger_name("NewMusicTrackerCounter")
+                     .file_name("NewMusicTrackerCounter.log")
+                     .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
+                     .log_to_file(true));
 #ifdef _DLL
   SetThreadDescription(GetCurrentThread(), L"MainThread");
 #endif
@@ -76,33 +77,6 @@ int main(int argc, char** argv) {
 
 std::string msw::helpers::Utilities::app_folder() { return sago::getConfigHome() + '/' + consts::PROGRAM_NAME_SHORT; }
 
-std::string msw::musicstuffs::FooNpLogParser::LineGetter::next() {
-  constexpr int LINES_TO_READ = 2;
-  ifstream_.seekg(0, std::ios_base::end);
-  size_t size = static_cast<size_t>(ifstream_.tellg());
-  int newlineCount = 0;
-  while (ifstream_ && buffer_.size() != size && newlineCount < LINES_TO_READ) {
-    buffer_.resize(std::min(buffer_.size() + LINE_SIZE_STEP, size));
-    ifstream_.seekg(-static_cast<std::streamoff>(buffer_.size()), std::ios_base::end);
-    ifstream_.read(buffer_.data(), buffer_.size());
-    newlineCount = std::count(buffer_.begin(), buffer_.end(), '\n');
-  }
-
-  auto rightmost_newline = std::next(std::find(buffer_.rbegin(), buffer_.rend(), '\n'));
-  if (std::distance(buffer_.rbegin(), rightmost_newline) > 3) {
-    // no newline at the end
-    return {rightmost_newline.base() + 1, buffer_.end()};
-  }
-  auto next_newline = std::find(rightmost_newline, buffer_.rend(), '\n');
-  return std::string(next_newline.base(), rightmost_newline.base());
-}
-
-msw::musicstuffs::FooNpLogParser::LineGetter::LineGetter(std::ifstream ifstream1) : ifstream_(std::move(ifstream1)) {
-  buffer_.reserve(LINE_SIZE_STEP + 1);
-  ifstream_.seekg(0, std::ios_base::end);
-  file_size_ = ifstream_.tellg();
-}
-
-msw::musicstuffs::FooNpLogParser::LineGetter msw::musicstuffs::FooNpLogParser::lines() const {
-  return std::ifstream(app_config_.file_to_listen(), std::ios::binary);
+void msw::musicstuffs::FooNpLogParser::init_lines_reader() {
+  reverse_line_reader_.emplace(std::make_unique<std::ifstream>(app_config_.file_to_listen(), std::ios::binary));
 }

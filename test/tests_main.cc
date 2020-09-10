@@ -1,5 +1,4 @@
 #include "tests_main.hpp"
-#include "persistence_test.hpp"
 
 #include <sago/platform_folders.h>
 
@@ -10,7 +9,7 @@
 #include <src/model/song_with_metadata.hpp>
 #include <test/util/tests_accessor.hpp>
 
-
+#include "persistence_test.hpp"
 
 namespace msw::pg {
 data::Accessor<msw::model::SongList>* song_list;
@@ -50,6 +49,7 @@ std::tuple<std::string, std::string, std::string, std::string> msw::StringProvid
                          get_str(std::move(prefix)));
 }
 
-msw::musicstuffs::FooNpLogParser::LineGetter msw::musicstuffs::FooNpLogParser::lines() const {
-  // return (reinterpret_cast<const MockFooNpLogParser*>(this))->line_to_parse_;
+void msw::musicstuffs::FooNpLogParser::init_lines_reader() {
+  const auto* downcasted_me = reinterpret_cast<MockFooNpLogParser*>(this);
+  reverse_line_reader_.emplace(std::make_unique<std::istringstream>(downcasted_me->line_to_parse_));
 }

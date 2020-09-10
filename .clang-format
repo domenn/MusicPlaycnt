@@ -14,5 +14,6 @@ BinPackArguments: false
 BinPackParameters: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 FixNamespaceComments: true
+BreakBeforeBraces: Attach
 #AllowShortCaseLabelsOnASingleLine: false
 #AllowShortFunctionsOnASingleLine: Inline

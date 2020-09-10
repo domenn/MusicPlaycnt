@@ -1,6 +1,5 @@
 #include "tests_accessor.hpp"
 
-#include <src/model/song_list.hpp>
 #include <src/model/song_with_metadata.hpp>
 #include <src/data/pointers_to_globals.hpp>
 
@@ -26,15 +25,4 @@ msw::data::TestsAccessor<T>::TestsAccessor()
 }
 
 
-template <typename T>
-void persist_for_tests(void* data, T* serializable) {
-
-}
-
-template <typename T>
-std::unique_ptr<T> initial_load_for_tests(void* data) {
-
-}
-
-// template class msw::data::TestsAccessor<msw::model::SongList>;
 template class msw::data::TestsAccessor<msw::model::SongWithMetadata>;
