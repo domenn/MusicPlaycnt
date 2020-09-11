@@ -4,11 +4,6 @@
 #include <src/model/song_with_metadata.hpp>
 
 template <typename T>
-msw::data::Accessor<T>::Accessor(void* data)
-//   : data_(data)
-{}
-
-template <typename T>
 void msw::data::Accessor<T>::write(std::function<void(T*)> mutator) {
   if (!item_) {
     item_ = initial_load_function();

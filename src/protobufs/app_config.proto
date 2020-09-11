@@ -7,4 +7,7 @@ message PlaycntConfig {
   string FileToListen = 2;
   repeated string Delimiters = 3;
   string StoredState = 4;
+  string StoredData = 5;
+  int32 PlaycountThresholdSeconds = 6;
+  string SongPrintFormat = 7;
 }

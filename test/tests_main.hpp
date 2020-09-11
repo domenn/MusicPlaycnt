@@ -2,7 +2,6 @@
 
 #include <fmt/ostream.h>
 #include <gtest/gtest.h>
-
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/spd_logging.hpp>
 #include <src/misc/utilities.hpp>
@@ -28,9 +27,6 @@ class FoobarLineParse : public testing::TestWithParam<std::pair<std::string, std
 
 TEST_P(FoobarLineParse, emptyStringsCmd) {
   const auto& param_pair = GetParam();
-  msw::model::AppConfig tests_config;
-  tests_config.set_my_defaults();
-  msw::pg::app_config = &tests_config;
   MockFooNpLogParser parser(param_pair.first);
   msw::model::SongWithMetadata smd{parser};
   ASSERT_EQ(smd.get_song().album(), param_pair.second);
@@ -67,7 +63,7 @@ TEST(Fundamental, createSaveAndRestore) {
 
   msw::model::Song song1(std::move(proto_song));
   std::string serd = song1.serialize();
-  SPDLOG_INFO("Serialized first " + serd);
+  SPDLOG_INFO("Serialized first {}\n(as str: {})" , serd, song1);
 
   msw::model::Song song2 = msw::model::Song::deserialize(serd);
   SPDLOG_INFO("Restored and again serd ... what happens: {}", serd);
@@ -154,6 +150,16 @@ TEST(Misc, stackTraceOstreamDifferentSizes) {
 
   app_stack_walker.set_custom_value({"final_one"});
   SPDLOG_INFO("Attempt4 .. final one: {}", app_stack_walker);
+}
+
+TEST(tbd1,not_eq) {
+  msw::StringProvider sp;
+  Song song1(sp.get_str(), sp.get_str(), sp.get_str(), sp.get_str());
+  Song song2(song1.album(), song1.artist(), song1.title(), "RandomFN");
+  auto sm = song1.similarity(song2);
+
+  SPDLOG_INFO("{}", msw::model::SongPartDifferences::SongSimilarityOstreamHelper{&sm, &song1, &song2});
+  // todo some assert???
 }
 
 // class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {

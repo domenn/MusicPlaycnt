@@ -1,19 +1,16 @@
 
-// clang-format off
-#include <src/misc/consts.hpp>
 #include <src/win/windows_headers.hpp>
-// clang-format on
+
 #include "tests_main.hpp"
 
+#include "persistence_test.hpp"
 #include <sago/platform_folders.h>
-
 #include <src/data/accessor.hpp>
+#include <src/misc/consts.hpp>
 #include <src/misc/utilities.hpp>
 #include <src/model/song_list.hpp>
 #include <src/model/song_with_metadata.hpp>
 #include <test/util/tests_accessor.hpp>
-
-#include "persistence_test.hpp"
 
 using string = std::string;
 
@@ -29,6 +26,10 @@ int main(int argc, char** argv) {
   msw::data::TestsAccessor<msw::model::SongWithMetadata> inst_handled_song;
   // msw::pg::song_list = &inst_song_list;
   msw::pg::handled_song = &inst_handled_song;
+
+  msw::model::AppConfig tests_config;
+  tests_config.set_my_defaults();
+  msw::pg::app_config = &tests_config;
 
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();

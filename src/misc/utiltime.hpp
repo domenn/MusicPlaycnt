@@ -14,6 +14,13 @@
 // Good article:
 // https://developers.google.com/protocol-buffers/docs/reference/csharp/class/google/protobuf/well-known-types/timestamp
 
+namespace utiltime::primitive_convs {
+template <typename var_type>
+var_type ms_to_s(var_type ms) {
+  return static_cast<var_type>(ms) / static_cast<var_type>(1000);
+}
+}
+
 namespace msw::helpers {
 
 constexpr char D_DOT_M_DOT_Y__HMS[] = "%d.%m.%y_%H.%M.%S";

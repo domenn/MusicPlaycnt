@@ -41,7 +41,7 @@ void Tray::handle_menu_choice(BOOL clicked) const {
       on_version();
       break;
     case APP_MENU_ENTRY_OPEN_CFG:
-      msw::helpers::Utilities::start_non_executable_file(msw::model::AppConfig::get_path_to_config_file());
+      helpers::Utilities::start_non_executable_file(model::AppConfig::get_path_to_config_file());
       break;
     case APP_MENU_ENTRY_EXIT:
       on_exit();
@@ -109,14 +109,18 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         assert(false && "not really implemented .... what next?");
         get_tray_from_window(hwnd)->on_exit();
       case CUSTOM_CHANGE_NOTIFY:
-        SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
-        do_things::new_song_happened(static_cast<msw::model::SongWithMetadata>(msw::musicstuffs::FooNpLogParser()));
-
+        try {
+          SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
+          do_things::new_song_happened(static_cast<model::SongWithMetadata>(musicstuffs::FooNpLogParser()));
+        } catch (exceptions::ApplicationSendMessage const& any) {
+          SPDLOG_WARN("{} - {}", typeid(any).name(), any.what());
+          MessageBoxW(hwnd, any.what_w().c_str(), L"Logic error", MB_OK | MB_ICONWARNING);
+        }
         get_tray_from_window(hwnd)->listener_.listen();
         return 0;
     }
-  } catch (msw::exceptions::ApplicationError const& any) {
-    SPDLOG_CRITICAL(any.what());
+  } catch (exceptions::ApplicationError const& any) {
+    SPDLOG_CRITICAL("{} - {}", typeid(any).name(), any.what());
     MessageBoxW(hwnd, any.what_w().c_str(), L"Windows API exception critical error", MB_OK | MB_ICONERROR);
     get_tray_from_window(hwnd)->on_exit();
     return 0;
@@ -160,7 +164,7 @@ void Tray::make_window(int n_cmd_show, HICON h_icon) {
   wc.hCursor = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
   wc.lpszMenuName = nullptr;
-  wc.lpszClassName = msw::consts::win::WIN_CLASS_NAMEW;
+  wc.lpszClassName = consts::win::WIN_CLASS_NAMEW;
   wc.hIconSm = h_icon;
 
   if (!RegisterClassEx(&wc)) {
@@ -170,8 +174,8 @@ void Tray::make_window(int n_cmd_show, HICON h_icon) {
 
   // Step 2: Creating the Window
   hwnd_ = CreateWindowEx(WS_EX_CLIENTEDGE,
-                         msw::consts::win::WIN_CLASS_NAMEW,
-                         msw::consts::win::WIN_HEADER_TXTW,
+                         consts::win::WIN_CLASS_NAMEW,
+                         consts::win::WIN_HEADER_TXTW,
                          WS_OVERLAPPEDWINDOW,
                          CW_USEDEFAULT,
                          CW_USEDEFAULT,
@@ -197,7 +201,7 @@ void Tray::setup_icon() {
   if (!h_trayicon) {
     throw MAKE_DIAG_WIN_API_ERR(GetLastError(), "LoadIcon");
   }
-  const wchar_t* windowHeader = msw::consts::win::WIN_HEADER_TXTW;
+  const wchar_t* windowHeader = consts::win::WIN_HEADER_TXTW;
   make_window(SW_HIDE, h_trayicon);
   auto icon_data = create_notifyicondata_structure(h_trayicon);
   if (!Shell_NotifyIcon(NIM_ADD, &icon_data)) {
@@ -205,10 +209,10 @@ void Tray::setup_icon() {
   }
 }
 
-int tray::Tray::run_message_loop() {
+int Tray::run_message_loop() {
   try {
     setup_icon();
-  } catch (msw::exceptions::ApplicationError const& any) {
+  } catch (exceptions::InformationalApplicationError const& any) {
     SPDLOG_CRITICAL("Setup failed: {}", any.what());
     return -1;
   }

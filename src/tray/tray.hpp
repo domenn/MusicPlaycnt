@@ -1,10 +1,6 @@
 ﻿#pragma once
-
-// clang-format off
-//  ↳ windows headers must be included before shellapi!
 #include <src/win/windows_headers.hpp>
 #include <shellapi.h>
-// clang-format on
 
 #include "listener.hpp"
 

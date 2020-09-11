@@ -1,41 +1,103 @@
 #include "do_things.hpp"
 
+#include <filesystem>
 #include <src/data/accessor.hpp>
 #include <src/data/pointers_to_globals.hpp>
+#include <src/misc/utilities.hpp>
+#include <src/misc/utiltime.hpp>
+#include <src/model/app_config.hpp>
 #include <src/model/song_with_metadata.hpp>
+#include <src/win/winapi_exceptions.hpp>
 
 using namespace msw::model;
 
 namespace msw::do_things {
 
 class Handler {
- private:
   SongWithMetadata new_song_;
   ActionType new_song_action_type_{new_song_.action_type()};
 
+  void potentially_update_current();
+  void update_timestamp_for_current();
+  bool equals_or_throw();
+
  public:
   Handler(SongWithMetadata&& new_song);
+
   void update_data_for_currently_stored_song();
   void advance();
 };
 
 Handler::Handler(SongWithMetadata&& new_song) : new_song_(std::move(new_song)) {
-  // TODO app_cfg ...
+  // "normalize" the path
+  auto tmp_path = (std::filesystem::relative(new_song_.get_song().path(), msw::pg::app_config->library_path())
+                       .lexically_normal()
+                       .string());
+  if (tmp_path.empty()) {
+    throw exceptions::ApplicationSendMessage(
+        "Path is empty. Make sure that the config is correct.\n(LibraryPath - configure the root of your music)");
+  }
+#ifdef _WIN32
+  msw::helpers::Utilities::transform_replace_all(tmp_path, '\\', "/", 1);
+#endif
+  new_song_.get_song().set_path(std::move(tmp_path));
+}
+
+void Handler::potentially_update_current() {
+  const auto current_song_reader = pg::handled_song->read();
+  // step 1: playing time OK?
+  const auto total_playback_seconds =
+      utiltime::primitive_convs::ms_to_s(new_song_.action_timestamp() - current_song_reader->action_timestamp()) -
+      current_song_reader->playing_seconds();
+  // step 2: song same? If yes, preserve playing_seconds
+  //
+  // if (pg::app_config->playcount_threshold_seconds() >= total_playback_seconds)
+  //  ;
+}
+
+void Handler::update_timestamp_for_current() {
+  // is it same? .. TODO
+  pg::handled_song->write([this](auto* thingy) {
+    const auto current_value = thingy->playing_seconds();
+    const auto new_value =
+        utiltime::primitive_convs::ms_to_s(new_song_.action_timestamp() - thingy->action_timestamp()) + current_value;
+    thingy->set_playing_seconds(new_value);
+  });
+}
+
+bool Handler::equals_or_throw() {
+  const auto song_wip = pg::handled_song->read()->get_song();
+  if (new_song_.get_song() == song_wip) {
+    return true;
+  }
+  SongPartDifferences sm = new_song_.get_song().similarity(song_wip);
+  // TODO finish this function ... if similiar but diff, write left right and diffd fields.
+  return false;
 }
 
 void Handler::update_data_for_currently_stored_song() {
   switch (new_song_action_type_) {
+    case model::ActionType::PLAY:
+      potentially_update_current();
+      return;
     case model::ActionType::NONE:
       return;
     case ActionType::STOP:
     case ActionType::PAUSE:
+      update_timestamp_for_current();
     default:
       return;
   }
   // noop ... todo implement.
 }
 
-void Handler::advance() { pg::handled_song->replace(&new_song_); }
+void Handler::advance() {
+  // todo .. songs differ? did we change?
+  return;
+  if (new_song_action_type_ != ActionType::NONE) {
+    pg::handled_song->replace(&new_song_);
+  }
+}
 
 void new_song_happened(msw::model::SongWithMetadata&& new_song) {
   Handler handler(std::move(new_song));

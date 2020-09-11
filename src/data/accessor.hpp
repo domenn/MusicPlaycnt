@@ -15,7 +15,7 @@ class Accessor {
   virtual void persist(T_item* item) = 0;
 
  public:
-  explicit Accessor(void* data);
+  explicit Accessor() = default;
   virtual ~Accessor() = default;
 
   void write(std::function<void(T_item*)> mutator);

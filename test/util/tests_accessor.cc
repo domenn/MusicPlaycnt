@@ -18,7 +18,7 @@ void msw::data::TestsAccessor<T>::persist(T* item) {
 }
 
 template <typename T>
-msw::data::TestsAccessor<T>::TestsAccessor() : Accessor<T>(&inst_data_) {
+msw::data::TestsAccessor<T>::TestsAccessor() : Accessor<T>() {
   msw::pg::data_for_tests = &inst_data_;
 }
 

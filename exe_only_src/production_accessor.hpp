@@ -17,13 +17,12 @@ namespace msw::data {
 
 template <typename T>
 class ProductionAccessor : public msw::data::Accessor<T> {
-  model::AppConfig& app_config_;
   const std::string& path_for_disk_storage_;
 
   std::unique_ptr<T> initial_load_function() override;
   void persist(T* item) override;
 
  public:
-  ProductionAccessor(model::AppConfig& app_config, const std::string& path_for_disk_storage);
+  ProductionAccessor(const std::string& path_for_disk_storage);
 };
 }  // namespace msw::data

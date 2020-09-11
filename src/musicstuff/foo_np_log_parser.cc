@@ -55,7 +55,7 @@ msw::musicstuffs::FooNpLogParser::operator msw::model::SongWithMetadata() {
 
     return produce();
   } catch (const std::exception& x) {
-    throw msw::exceptions::ApplicationError(
+    throw msw::exceptions::InformationalApplicationError(
         ("Error parsing line from file\n  "s + typeid(x).name() + '-' + x.what()).c_str(), MSW_TRACE_ENTRY_CREATE);
   }
 }

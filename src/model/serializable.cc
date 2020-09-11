@@ -1,12 +1,11 @@
 #include "serializable.hpp"
 
-#include <google/protobuf/text_format.h>
-
-#include <src/model/app_config.hpp>
-
+#include "song_with_metadata.hpp"
 #include "src/misc/open_wrap.hpp"
 #include "src/protobufs/songs.pb.h"
 #include "src/win/winapi_exceptions.hpp"
+#include <google/protobuf/text_format.h>
+#include <src/model/app_config.hpp>
 
 constexpr auto get_wr_pmode() {
 #ifdef _WIN32
@@ -53,7 +52,7 @@ google::protobuf::io::FileInputStream msw::Serializable::open_file_for_reading(c
 
 void msw::Serializable::serialize_impl(google::protobuf::io::ZeroCopyOutputStream& output_stream) {
   if (!google::protobuf::TextFormat::Print(*underlying_object_, &output_stream)) {
-    throw msw::exceptions::ApplicationError("Protobuf print failed", MSW_TRACE_ENTRY_CREATE);
+    throw msw::exceptions::InformationalApplicationError("Protobuf print failed", MSW_TRACE_ENTRY_CREATE);
   }
 }
 
@@ -78,7 +77,7 @@ msw::Serializable::Serializable(google::protobuf::Message* underlying_object) : 
 
 void msw::Serializable::read_impl(google::protobuf::io::ZeroCopyInputStream& input_stream) {
   if (!google::protobuf::TextFormat::Parse(&input_stream, underlying_object_)) {
-    throw msw::exceptions::ApplicationError("Protobuf read failed", MSW_TRACE_ENTRY_CREATE);
+    throw msw::exceptions::InformationalApplicationError("Protobuf read failed", MSW_TRACE_ENTRY_CREATE);
   }
 }
 
@@ -105,6 +104,7 @@ void msw::Serializable::deserialize_string_impl(const std::string& contents, goo
 }
 
 template msw::model::AppConfig msw::Serializable::from_file<msw::model::AppConfig>(std::string const& in_path);
+template msw::model::SongWithMetadata msw::Serializable::from_file<msw::model::SongWithMetadata>(std::string const& in_path);
 template std::string msw::Serializable::serialize<msw_proto_song::Song>(const msw_proto_song::Song&);
 template std::string msw::Serializable::serialize<msw_proto_song::SongWithMetadata>(
     const msw_proto_song::SongWithMetadata&);

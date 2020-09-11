@@ -23,5 +23,5 @@ message SongWithMetadata {
         STOP = 2;
       }
     ActionType action_type = 3;
-    int32 playing_seconds = 4;
+    uint64 playing_seconds = 4;
 }

@@ -90,6 +90,20 @@ class AppStackWalker {
   { __LINE__, __FUNCTION__, __FILE__ }
 
 class ApplicationError : public std::runtime_error {
+ public:
+  ApplicationError(const char* message) : runtime_error(message) {}
+
+#ifdef _WIN32
+  [[nodiscard]] std::wstring what_w() const;
+#endif
+};
+
+class ApplicationSendMessage : public ApplicationError {
+ public:
+  ApplicationSendMessage(const char* message) : ApplicationError(message) {}
+};
+
+class InformationalApplicationError : public ApplicationError {
  protected:
   const int line_{};
   const std::string function_{};
@@ -100,8 +114,8 @@ class ApplicationError : public std::runtime_error {
   std::vector<TraceEntry> stack_trace_{};
 
  public:
-  ApplicationError(const char* message, TraceEntry trace_entry)
-      : runtime_error(message),
+  InformationalApplicationError(const char* message, TraceEntry trace_entry)
+      : ApplicationError(message),
         line_(std::move(trace_entry.line_)),
         function_(std::move(trace_entry.function_)),
         filename_(std::move(trace_entry.filename_)),
@@ -110,11 +124,6 @@ class ApplicationError : public std::runtime_error {
   void add_to_stack_trace(TraceEntry trace_entry) { stack_trace_.emplace_back(std::move(trace_entry)); }
 
   char const* what() const noexcept override;
-  virtual ~ApplicationError() = default;
-
-#ifdef _WIN32
-  std::wstring what_w() const;
-#endif
 
   std::string stacktrace() const {
     std::ostringstream oss;
@@ -124,14 +133,14 @@ class ApplicationError : public std::runtime_error {
   }
 };
 
-class ErrorCode : public ApplicationError {
+class ErrorCode : public InformationalApplicationError {
  protected:
   const int error_code_;
   std::string getlasterror_function_;
 
  public:
   ErrorCode(int error_code, std::string function, TraceEntry trace_entry, const char* user_message = "")
-      : ApplicationError(user_message, std::move(trace_entry)),
+      : InformationalApplicationError(user_message, std::move(trace_entry)),
         error_code_(error_code),
         getlasterror_function_(std::move(function)) {}
 

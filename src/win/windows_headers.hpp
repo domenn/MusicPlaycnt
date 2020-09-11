@@ -36,9 +36,11 @@
 #define WINVER 0x0A00
 #define _WIN32_IE 0x0A00
 
+// clang-format off
 #include <Windows.h>
 #ifdef __MINGW32__
 #include <sys/stat.h>
 #endif
+// clang-format on
 
 #endif

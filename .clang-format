@@ -17,3 +17,14 @@ FixNamespaceComments: true
 BreakBeforeBraces: Attach
 #AllowShortCaseLabelsOnASingleLine: false
 #AllowShortFunctionsOnASingleLine: Inline
+
+IncludeCategories:
+  - Regex:           '^<[wW]indows[.]h>'
+    Priority:        -10
+    SortPriority:    -9
+  - Regex:           '^["<].*windows_headers[.]hpp[">]'
+    Priority:        -10
+    SortPriority:    -10
+  - Regex:           '^<shellapi[.]h>'
+    Priority:        -10
+    SortPriority:    -8

@@ -20,11 +20,9 @@ msw::model::AppConfig get_or_create_config() {
     return msw::Serializable::from_file<msw::model::AppConfig>(msw::model::AppConfig::get_path_to_config_file());
   } catch (const msw::exceptions::ErrorCode& err) {
     if (err.is_enoent()) {
-      const auto path =
-          msw::helpers::Utilities::file_in_app_folder_with_creating_app_folder(msw::consts::CONFIG_FILENAME);
       msw::model::AppConfig new_config;
       new_config.set_my_defaults();
-      new_config.serialize(path);
+      new_config.save_me();
       return new_config;
     }
     throw;
@@ -55,8 +53,7 @@ int main(int argc, char** argv) {
 #endif
   auto cfg = get_or_create_config();
   msw::pg::app_config = &cfg;
-
-  msw::data::ProductionAccessor<msw::model::SongWithMetadata> inst_handled_song(cfg, cfg.stored_state_path());
+  msw::data::ProductionAccessor<msw::model::SongWithMetadata> inst_handled_song(cfg.stored_state_path());
   msw::pg::handled_song = &inst_handled_song;
 
   if (cmd_parse.is_listen()) {

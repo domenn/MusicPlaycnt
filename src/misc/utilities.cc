@@ -1,12 +1,12 @@
+#include <src/win/windows_headers.hpp>
+
 #include "utilities.hpp"
 
+#include "consts.hpp"
 #include <src/data/pointers_to_globals.hpp>
 #include <src/model/song.hpp>
 #include <src/win/encoding.hpp>
 #include <src/win/winapi_exceptions.hpp>
-#include <src/win/windows_headers.hpp>
-
-#include "consts.hpp"
 
 #ifdef _WIN32
 #include <shellapi.h>
@@ -85,7 +85,7 @@ std::pair<std::basic_string<char_t>, std::basic_string<char_t>> msw::helpers::Ut
   } catch (const std::exception& x) {
     const std::string msg = "Getting parent folder of " + encoding::ensure_utf8(std::move(path)) +
                             " failed. Exception " + typeid(x).name() + " was thrown:\n " + x.what();
-    throw msw::exceptions::ApplicationError(msg.c_str(), MSW_TRACE_ENTRY_CREATE);
+    throw msw::exceptions::InformationalApplicationError(msg.c_str(), MSW_TRACE_ENTRY_CREATE);
   }
 }
 
@@ -160,7 +160,7 @@ cxxopts::Options msw::helpers::CmdParse::create_options() {
 void msw::helpers::CmdParse::try_get_throw(const std::string& parameter_name,
                                            const char* const as_name,
                                            const std::exception& thrown_x) {
-  throw msw::exceptions::ApplicationError(
+  throw msw::exceptions::InformationalApplicationError(
       ("Commandline issue getting " + parameter_name + " of type " + as_name + ". Exception thrown \"" +
        thrown_x.what() + "\"\n  Of type: \"" + typeid(thrown_x).name())
           .c_str(),
@@ -186,6 +186,47 @@ msw::helpers::ParseSongItems msw::helpers::CmdParse::song_data() const {
           try_get<std::string>(co::album_LO),
           try_get<std::string>(co::title_LO),
           try_get<std::string>(co::path_LO)};
+}
+
+std::string& msw::helpers::Utilities::erase_all_of(std::string& str, char character) {
+  // Removes characters but leaves gibberish on right, copying them left.
+  std::string::iterator end_pos = std::remove(str.begin(), str.end(), character);
+  // Remove gibberish on right that was introduced by copying to left.
+  str.erase(end_pos, str.end());
+  return str;
+}
+
+std::string& msw::helpers::Utilities::transform_replace_all(std::string& str,
+                                                            char from,
+                                                            const char* to,
+                                                            size_t to_size) {
+  const size_t occurrences = std::count(str.begin(), str.end(), from);
+  if (!occurrences) {
+    return str;
+  }
+  int64_t index_writing = str.size() + occurrences * (to_size - 1);
+  int64_t index_reading = str.size() - 1;
+  if (index_writing > static_cast<int64_t>(str.size())) {
+    str.resize(index_writing);
+  } else if (index_writing < static_cast<int64_t>(str.size())) {
+    // To is empty string (that's the only way for us to be able to come here ..)
+    // We only have to erase all apearances of from.
+    return erase_all_of(str, from);
+  }
+  // Work from right to left to reduce number of char moves and allow in-place
+  // transformation without seperate read / write buffers.
+  int64_t current_token_size = 0;
+
+  for (; index_reading >= 0; --index_reading, ++current_token_size, --index_writing) {
+    if (str[index_reading] == from) {
+      memcpy(str.data() + index_writing, str.data() + index_reading + 1, current_token_size);
+      index_writing -= to_size;
+      memcpy(str.data() + index_writing, to, to_size);
+      current_token_size = -1;
+      index_writing += 1;
+    }
+  }
+  return str;
 }
 
 namespace msw::pg {

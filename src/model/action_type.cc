@@ -15,5 +15,5 @@ msw::model::ActionType msw::model::from_foo_string(const std::string& foobar_str
   if (foobar_string == "not running") {
     return ActionType::STOP;
   }
-  throw exceptions::ApplicationError(("Cannot parse: " + foobar_string).c_str(), MSW_TRACE_ENTRY_CREATE);
+  throw exceptions::InformationalApplicationError(("Cannot parse: " + foobar_string).c_str(), MSW_TRACE_ENTRY_CREATE);
 }

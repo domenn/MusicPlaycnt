@@ -22,7 +22,9 @@ class SongWithMetadata : public Serializable {
 
   msw::model::Song get_song();
   ActionType action_type();
-  uint64_t timestamp();
+  uint64_t action_timestamp() const;
+  uint64_t playing_seconds() const;
+  void set_playing_seconds(uint64_t seconds);
 
   std::string serialize_to_str();
 };

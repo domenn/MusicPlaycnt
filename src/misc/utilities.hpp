@@ -1,6 +1,7 @@
 #pragma once
-#include <external/cxxopt.hpp>
 #include <src/win/windows_headers.hpp>
+
+#include <external/cxxopt.hpp>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,9 @@ class Utilities {
     rtrim(s);
     return s;
   }
+
+  static std::string& erase_all_of(std::string& str, char character);
+  static std::string& transform_replace_all(std::string& str, char from, const char* to, size_t to_size);
 };
 
 class CmdParse {
