@@ -1,11 +1,11 @@
 #include "foo_np_log_parser.hpp"
 
 #include <algorithm>
+#include <src/misc/consts.hpp>
 #include <src/misc/utilities.hpp>
+#include <src/misc/utiltime.hpp>
 #include <src/model/app_config.hpp>
 #include <src/win/winapi_exceptions.hpp>
-#include <src/misc/utiltime.hpp>
-#include <src/misc/consts.hpp>
 
 using namespace std::string_literals;
 
@@ -17,8 +17,7 @@ msw::model::SongWithMetadata replace_action_type(msw::model::SongWithMetadata&& 
 
 msw::model::SongWithMetadata msw::musicstuffs::FooNpLogParser::produce() {
   msw::model::SongWithMetadata song_with_metadata;
-  song_with_metadata.set_timestamp_of_action(
-      msw::helpers::parse_from_string(timestamp_, consts::FOO_TIME_FMT));
+  song_with_metadata.set_timestamp_of_action(msw::helpers::parse_from_string(timestamp_, consts::FOO_TIME_FMT));
   song_with_metadata.set_action_type(model::from_foo_string(status_));
   if (song_with_metadata.action_type() == model::ActionType::STOP) {
     return replace_action_type(operator model::SongWithMetadata(), model::ActionType::STOP);
@@ -30,9 +29,7 @@ msw::model::SongWithMetadata msw::musicstuffs::FooNpLogParser::produce() {
   return song_with_metadata;
 }
 
-msw::musicstuffs::FooNpLogParser::FooNpLogParser(const model::AppConfig& app_config)
-  : app_config_(app_config) {
-}
+msw::musicstuffs::FooNpLogParser::FooNpLogParser(const model::AppConfig& app_config) : app_config_(app_config) {}
 
 msw::musicstuffs::FooNpLogParser::operator msw::model::SongWithMetadata() {
   try {
@@ -58,7 +55,6 @@ msw::musicstuffs::FooNpLogParser::operator msw::model::SongWithMetadata() {
     return produce();
   } catch (const std::exception& x) {
     throw msw::exceptions::ApplicationError(
-        ("Error parsing line from file\n  "s + typeid(x).name() + '-' + x.what()).c_str(),
-        MSW_TRACE_ENTRY_CREATE);
+        ("Error parsing line from file\n  "s + typeid(x).name() + '-' + x.what()).c_str(), MSW_TRACE_ENTRY_CREATE);
   }
 }

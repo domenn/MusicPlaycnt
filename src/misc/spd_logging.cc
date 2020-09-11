@@ -1,9 +1,8 @@
 #include "spd_logging.hpp"
 
-#include <src/misc/custom_include_spdlog.hpp>
-
 #include <map>
 #include <memory>
+#include <src/misc/custom_include_spdlog.hpp>
 #include <vector>
 
 // #include "spdlog_colorful_sink_factory_singleton.hpp"
@@ -40,7 +39,7 @@ std::shared_ptr<spdlog::logger> spdl::make_new_logger(const char *name) {
 #ifdef _WIN32
 #ifndef NDEBUG
   sinks.emplace_back(std::make_shared<spdlog::sinks::msvc_sink_mt>());
-  spdlog::sinks::msvc_sink_mt *vs_sink = static_cast<spdlog::sinks::msvc_sink_mt*>(sinks.back().get());
+  spdlog::sinks::msvc_sink_mt *vs_sink = static_cast<spdlog::sinks::msvc_sink_mt *>(sinks.back().get());
 #endif
 #endif
   // sinks.emplace_back(internal::ColorfulSinkFactorySingleton::make_colorful_stdout());

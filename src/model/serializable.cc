@@ -1,10 +1,12 @@
 #include "serializable.hpp"
+
 #include <google/protobuf/text_format.h>
-#include "src/misc/open_wrap.hpp"
-#include "src/win/winapi_exceptions.hpp"
-#include "src/protobufs/songs.pb.h"
+
 #include <src/model/app_config.hpp>
 
+#include "src/misc/open_wrap.hpp"
+#include "src/protobufs/songs.pb.h"
+#include "src/win/winapi_exceptions.hpp"
 
 constexpr auto get_wr_pmode() {
 #ifdef _WIN32
@@ -36,21 +38,15 @@ google::protobuf::io::FileOutputStream msw::Serializable::open_file_for_writing(
 #else
     using thrown_e = msw::exceptions::ErrorCode;
 #endif
-    throw thrown_e(my_errno,
-                   M_PROTOBUF_OPEN_FILE_IMPL,
-                   {__LINE__, __FUNCTION__, __FILE__});
-
+    throw thrown_e(my_errno, M_PROTOBUF_OPEN_FILE_IMPL, {__LINE__, __FUNCTION__, __FILE__});
   }
   return google::protobuf::io::FileOutputStream(new_file);
 }
 
 google::protobuf::io::FileInputStream msw::Serializable::open_file_for_reading(const std::string& path) {
-  auto [existing_file, my_errno] =
-      cp_open_lw(path.c_str(), O_RDONLY);
+  auto [existing_file, my_errno] = cp_open_lw(path.c_str(), O_RDONLY);
   if (existing_file == -1) {
-    throw msw::exceptions::ErrorCode(my_errno,
-                                     M_PROTOBUF_OPEN_FILE_IMPL,
-                                     {__LINE__, __FUNCTION__, __FILE__});
+    throw msw::exceptions::ErrorCode(my_errno, M_PROTOBUF_OPEN_FILE_IMPL, {__LINE__, __FUNCTION__, __FILE__});
   }
   return google::protobuf::io::FileInputStream(existing_file);
 }
@@ -75,12 +71,10 @@ void msw::Serializable<proto_t>::serialize_impl(google::protobuf::io::ZeroCopyOu
 
  */
 
-//template class msw::Serializable<msw_proto_song::Song>;
-//template class msw::Serializable<msw_proto_cfg::PlaycntConfig>;
+// template class msw::Serializable<msw_proto_song::Song>;
+// template class msw::Serializable<msw_proto_cfg::PlaycntConfig>;
 
-msw::Serializable::Serializable(google::protobuf::Message* underlying_object)
-  : underlying_object_(underlying_object) {
-}
+msw::Serializable::Serializable(google::protobuf::Message* underlying_object) : underlying_object_(underlying_object) {}
 
 void msw::Serializable::read_impl(google::protobuf::io::ZeroCopyInputStream& input_stream) {
   if (!google::protobuf::TextFormat::Parse(&input_stream, underlying_object_)) {

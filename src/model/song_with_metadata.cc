@@ -1,9 +1,7 @@
 #include "song_with_metadata.hpp"
 
 msw::model::SongWithMetadata::SongWithMetadata(SongWithMetadata&& other) noexcept
-  : Serializable(&proto_s_),
-    proto_s_(std::move(other.proto_s_)) {
-}
+    : Serializable(&proto_s_), proto_s_(std::move(other.proto_s_)) {}
 
 msw::model::SongWithMetadata& msw::model::SongWithMetadata::operator=(SongWithMetadata&& other) noexcept {
   proto_s_ = std::move(other.proto_s_);

@@ -1,14 +1,14 @@
-#include <src/win/windows_headers.hpp>
-#include <src/misc/custom_include_spdlog.hpp>
 #include "tray.hpp"
+
+#include <src/misc/custom_include_spdlog.hpp>
 #include <src/win/winapi_exceptions.hpp>
+
 #include "../../Res/resource.hpp"
-#include <shellapi.h>
 #include "src/misc/consts.hpp"
 #include "src/misc/utilities.hpp"
 #include "src/model/app_config.hpp"
-#include "src/musicstuff/foo_np_log_parser.hpp"
 #include "src/musicstuff/do_things.hpp"
+#include "src/musicstuff/foo_np_log_parser.hpp"
 
 using namespace msw;
 using namespace tray;
@@ -16,12 +16,11 @@ namespace I1 = consts::interact;
 
 LRESULT Tray::create_menu(Tray* tray) {
   if (tray == 0) {
-    throw MAKE_DIAG_WIN_API_ERR(GetLastError(),
-                                "((CREATESTRUCT*)lParam)->lpCreateParams)");
+    throw MAKE_DIAG_WIN_API_ERR(GetLastError(), "((CREATESTRUCT*)lParam)->lpCreateParams)");
   }
   SPDLOG_DEBUG("Loading menu from the resource.");
-  const auto loaded_menu = LoadMenu(reinterpret_cast<HINSTANCE>(tray->hinstance_),
-                                    MAKEINTRESOURCE(APP_MENU_TRAY_RIGHTCLICK));
+  const auto loaded_menu =
+      LoadMenu(reinterpret_cast<HINSTANCE>(tray->hinstance_), MAKEINTRESOURCE(APP_MENU_TRAY_RIGHTCLICK));
   tray->menu_to_display_ = GetSubMenu(loaded_menu, 0);
 
   SetMenuDefaultItem(tray->menu_to_display_, 0, TRUE);
@@ -29,16 +28,11 @@ LRESULT Tray::create_menu(Tray* tray) {
 }
 
 LRESULT on_version() {
-  MessageBox(nullptr,
-             consts::ver::PROGRAM_NAME_AND_VERSION,
-             consts::ver::VERSION_HEADERW,
-             MB_ICONINFORMATION | MB_OK);
+  MessageBox(nullptr, consts::ver::PROGRAM_NAME_AND_VERSION, consts::ver::VERSION_HEADERW, MB_ICONINFORMATION | MB_OK);
   return 0;
 }
 
-void Tray::on_exit() const {
-  SendMessage(hwnd_, WM_CLOSE, 0, 0);
-}
+void Tray::on_exit() const { SendMessage(hwnd_, WM_CLOSE, 0, 0); }
 
 void Tray::handle_menu_choice(BOOL clicked) const {
   SPDLOG_TRACE("Menu click: " + std::to_wstring(clicked));
@@ -66,23 +60,15 @@ LRESULT Tray::display_tray_menu(HWND hwnd) const {
   SPDLOG_TRACE("calling TrackPopupMenu");
   // don't send me WM_COMMAND messages about this window, instead return the identifier
   // of the clicked menu item (TPM_NONOTIFY)
-  BOOL clicked = TrackPopupMenu(menu_to_display_,
-                                TPM_RETURNCMD | TPM_NONOTIFY,
-                                curPoint.x,
-                                curPoint.y,
-                                0,
-                                hwnd,
-                                nullptr);
+  BOOL clicked =
+      TrackPopupMenu(menu_to_display_, TPM_RETURNCMD | TPM_NONOTIFY, curPoint.x, curPoint.y, 0, hwnd, nullptr);
   SendMessage(hwnd, WM_NULL, 0, 0);
   // send benign message to window to make sure the menu goes away.
   this->handle_menu_choice(clicked);
   return 0;
 }
 
-LRESULT Tray::handle_tray_icon_callback(HWND hwnd,
-                                        UINT msg,
-                                        WPARAM w_param,
-                                        LPARAM l_param) {
+LRESULT Tray::handle_tray_icon_callback(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param) {
   switch (l_param) {
     case WM_LBUTTONDBLCLK:
       return on_version();
@@ -99,26 +85,23 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
     switch (msg) {
         // NOLINT(hicpp-multiway-paths-covered)
       case WM_CREATE: {
-        auto* tray_ptr = reinterpret_cast<Tray*>(
-          reinterpret_cast<CREATESTRUCTA*>(lParam)->lpCreateParams);
+        auto* tray_ptr = reinterpret_cast<Tray*>(reinterpret_cast<CREATESTRUCTA*>(lParam)->lpCreateParams);
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(tray_ptr));
         return create_menu(tray_ptr);
       }
       case TRAY_ICON_CALLBACK_ID:
-        return get_tray_from_window(hwnd)->
-            handle_tray_icon_callback(hwnd, msg, wParam, lParam);
+        return get_tray_from_window(hwnd)->handle_tray_icon_callback(hwnd, msg, wParam, lParam);
         // intercept the hittest message.. making full body of
         // window draggable.
       case WM_NCHITTEST: {
         // http://www.catch22.net/tuts/tips
         // this tests if you're on the non client area hit test
         const auto uHitTest = DefWindowProc(hwnd, WM_NCHITTEST, wParam, lParam);
-        if (uHitTest == HTCLIENT)
-          return HTCAPTION;
+        if (uHitTest == HTCLIENT) return HTCAPTION;
         return uHitTest;
       }
       case CUSTOM_THREAD_IS_DOWN:
-        //MessageBox(
+        // MessageBox(
         //    nullptr,
         //    I1::MSG_WORKER_THREAD_DIED,
         //    I1::MSG_ERROR_HEADER,
@@ -127,9 +110,8 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         get_tray_from_window(hwnd)->on_exit();
       case CUSTOM_CHANGE_NOTIFY:
         SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
-        do_things::new_song_happened(
-            static_cast<msw::model::SongWithMetadata>(msw::musicstuffs::FooNpLogParser(
-                get_tray_from_window(hwnd)->config())));
+        do_things::new_song_happened(static_cast<msw::model::SongWithMetadata>(
+            msw::musicstuffs::FooNpLogParser(get_tray_from_window(hwnd)->config())));
 
         get_tray_from_window(hwnd)->listener_.listen();
         return 0;
@@ -165,7 +147,6 @@ NOTIFYICONDATA Tray::create_notifyicondata_structure(HICON icon) {
   return iconData;
 }
 
-
 void Tray::make_window(int n_cmd_show, HICON h_icon) {
   WNDCLASSEX wc;
   SPDLOG_TRACE("Creating win");
@@ -184,10 +165,7 @@ void Tray::make_window(int n_cmd_show, HICON h_icon) {
   wc.hIconSm = h_icon;
 
   if (!RegisterClassEx(&wc)) {
-    MessageBox(nullptr,
-               L"Window Registration Failed!",
-               L"Error!",
-               MB_ICONEXCLAMATION | MB_OK);
+    MessageBox(nullptr, L"Window Registration Failed!", L"Error!", MB_ICONEXCLAMATION | MB_OK);
     throw MAKE_DIAG_WIN_API_ERR(GetLastError(), "RegisterClassEx");
   }
 
@@ -206,10 +184,7 @@ void Tray::make_window(int n_cmd_show, HICON h_icon) {
                          this);
 
   if (!hwnd_) {
-    MessageBox(nullptr,
-               L"Window Creation Failed!",
-               L"Error!",
-               MB_ICONEXCLAMATION | MB_OK);
+    MessageBox(nullptr, L"Window Creation Failed!", L"Error!", MB_ICONEXCLAMATION | MB_OK);
     throw MAKE_DIAG_WIN_API_ERR(GetLastError(), "CreateWindowEx");
   }
 
@@ -232,7 +207,6 @@ void Tray::setup_icon() {
 }
 
 int tray::Tray::run_message_loop() {
-
   try {
     setup_icon();
   } catch (msw::exceptions::ApplicationError const& any) {
@@ -255,8 +229,4 @@ void Tray::send_windows_message(UINT msg) const {
   }
 }
 
-Tray::Tray(HINSTANCE hinstance, const model::AppConfig& cfg)
-  : hinstance_(hinstance),
-    cfg_(cfg),
-    listener_(this) {
-}
+Tray::Tray(HINSTANCE hinstance, const model::AppConfig& cfg) : hinstance_(hinstance), cfg_(cfg), listener_(this) {}

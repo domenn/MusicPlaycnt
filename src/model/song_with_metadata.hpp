@@ -1,26 +1,21 @@
 #pragma once
-#include "serializable.hpp"
-#include "src/protobufs/songs.pb.h"
 #include "action_type.hpp"
+#include "serializable.hpp"
 #include "song.hpp"
+#include "src/protobufs/songs.pb.h"
 
 namespace msw::model {
 class SongWithMetadata : public Serializable {
-
   msw_proto_song::SongWithMetadata proto_s_{};
 
-public:
-  SongWithMetadata()
-    : Serializable(&proto_s_) {
-  }
-
+ public:
+  SongWithMetadata() : Serializable(&proto_s_) {}
 
   SongWithMetadata(const SongWithMetadata& other) = delete;
   SongWithMetadata(SongWithMetadata&& other) noexcept;
   SongWithMetadata& operator=(const SongWithMetadata& other) = delete;
   SongWithMetadata& operator=(SongWithMetadata&& other) noexcept;
   ~SongWithMetadata() = default;
-
 
   void set_timestamp_of_action(uint64_t);
   void set_action_type(ActionType);
@@ -31,4 +26,4 @@ public:
 
   std::string serialize_to_str();
 };
-}
+}  // namespace msw::model

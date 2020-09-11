@@ -1,25 +1,26 @@
 #include "do_things.hpp"
+
+#include <src/data/accessor.hpp>
 #include <src/data/pointers_to_globals.hpp>
 #include <src/model/song_with_metadata.hpp>
-#include <src/data/accessor.hpp>
 
 using namespace msw::model;
 
 namespace msw::do_things {
 
 class Handler {
-private:
-
+ private:
   SongWithMetadata new_song_;
   ActionType new_song_action_type_{new_song_.action_type()};
-public:
+
+ public:
   Handler(SongWithMetadata&& new_song);
   void update_data_for_currently_stored_song();
   void advance();
 };
 
-Handler::Handler(SongWithMetadata&& new_song)
-  : new_song_(std::move(new_song)) {
+Handler::Handler(SongWithMetadata&& new_song) : new_song_(std::move(new_song)) {
+  // TODO app_cfg ...
 }
 
 void Handler::update_data_for_currently_stored_song() {
@@ -34,29 +35,25 @@ void Handler::update_data_for_currently_stored_song() {
   // noop ... todo implement.
 }
 
-void Handler::advance() {
-  pg::handled_song->replace(&new_song_);
-}
+void Handler::advance() { pg::handled_song->replace(&new_song_); }
 
 void new_song_happened(msw::model::SongWithMetadata&& new_song) {
   Handler handler(std::move(new_song));
   handler.update_data_for_currently_stored_song();
   handler.advance();
 }
-} // namespace msw
-
+}  // namespace msw::do_things
 
 /*
 
 
     # """Scenarios:
     # * 1:: Current song is playing and last song is playing. Conditionally (playtime) increment last song PC.
-    # * 2:: Current song is stopped, last song playing. Leave last song same and allow for resume. Set status to stopped. Write (append) playtime.
-    # * 3:: Current song is paused, last song playing. Same as stopped. Status to paused. Write (append) playtime.
-    # * 4:: Current is not running or bad entry. Basically same as stopped and so.
-    # * 5:: Current song is playing, Last song is pause or stop or bad,
-    #  *  5.1 if songs are same, save current time and set status (to playing)
-    #  .  5.2 If not, set last_song = current_song .. conditionally increment play time
+    # * 2:: Current song is stopped, last song playing. Leave last song same and allow for resume. Set status to
+   stopped. Write (append) playtime. # * 3:: Current song is paused, last song playing. Same as stopped. Status to
+   paused. Write (append) playtime. # * 4:: Current is not running or bad entry. Basically same as stopped and so. # *
+   5:: Current song is playing, Last song is pause or stop or bad, #  *  5.1 if songs are same, save current time and
+   set status (to playing) #  .  5.2 If not, set last_song = current_song .. conditionally increment play time
     #
     # Strategy:
     # * For play action set action timestamp.
@@ -95,45 +92,38 @@ void new_song_happened(msw::model::SongWithMetadata&& new_song) {
             song.playing_status = song_cpy.playing_status
         self.diaglog.debug("handling, will do main checks. Status: song: %s (%s); last song: %s (%s)", song,
                            getattr(song, "playing_status", None), last_song, getattr(last_song, "playing_status", None))
-        if song == last_song and last_song.playing_status == LoggedSong.STATUS_PLAYING and song == LoggedSong.STATUS_PLAYING:
-            self.diaglog.debug(
-                "handling, songs are same. Last song and current song are playing. Probably listen on repeat, will add playcount")
-            # scenario 1: repeat
-            self.conditionally_increment_pc(song)
+        if song == last_song and last_song.playing_status == LoggedSong.STATUS_PLAYING and song ==
+   LoggedSong.STATUS_PLAYING: self.diaglog.debug( "handling, songs are same. Last song and current song are playing.
+   Probably listen on repeat, will add playcount") # scenario 1: repeat self.conditionally_increment_pc(song)
             self.playing_song = song
             self.playback_start_time = datetime.now()
             pass
-        elif song == last_song and song.playing_status != LoggedSong.STATUS_PLAYING and last_song.playing_status == LoggedSong.STATUS_PLAYING:
-            # 2:: and 3:: and 4:: We did stop or pause or exit SW. Update status of last song and stop timing.
-            self.diaglog.debug("handling, stop or similiar event happened. Last song equals current song %s",
+        elif song == last_song and song.playing_status != LoggedSong.STATUS_PLAYING and last_song.playing_status ==
+   LoggedSong.STATUS_PLAYING: # 2:: and 3:: and 4:: We did stop or pause or exit SW. Update status of last song and stop
+   timing. self.diaglog.debug("handling, stop or similiar event happened. Last song equals current song %s",
                                self.playing_song)
             last_song.playing_seconds += (datetime.now() - self.playback_start_time).seconds
             last_song.playing_status = song.playing_status
             self.diaglog.debug(
                 "handling, last song playing status changed. Last song: %s (%s)\nLast song playtime set to %s.",
                 last_song, last_song.playing_status, last_song.playing_seconds)
-        elif song == last_song and song.playing_status != LoggedSong.STATUS_PLAYING and last_song.playing_status != LoggedSong.STATUS_PLAYING:
-            self.diaglog.debug(
-                "handling, song went from nonplaying to nonplaying, exacly %s to %s\nBasically do nothing, just change last song playing status.",
-                last_song.playing_status, song.playing_status)
+        elif song == last_song and song.playing_status != LoggedSong.STATUS_PLAYING and last_song.playing_status !=
+   LoggedSong.STATUS_PLAYING: self.diaglog.debug( "handling, song went from nonplaying to nonplaying, exacly %s to
+   %s\nBasically do nothing, just change last song playing status.", last_song.playing_status, song.playing_status)
             self.playing_song.playing_status = song.playing_status
-        elif song == last_song and last_song.playing_status != LoggedSong.STATUS_PLAYING and song.playing_status == LoggedSong.STATUS_PLAYING:
-            # 5.1:: We did resume from pause or stop or smth. Do not increase PC. Set song as playing and take previous playtime.
-            self.diaglog.debug("handling, resume from pause / stop / dead. Last song equals current song %s",
-                               self.playing_song)
-            self.playing_song = song
-            song.playing_seconds = last_song.playing_seconds
+        elif song == last_song and last_song.playing_status != LoggedSong.STATUS_PLAYING and song.playing_status ==
+   LoggedSong.STATUS_PLAYING: # 5.1:: We did resume from pause or stop or smth. Do not increase PC. Set song as playing
+   and take previous playtime. self.diaglog.debug("handling, resume from pause / stop / dead. Last song equals current
+   song %s", self.playing_song) self.playing_song = song song.playing_seconds = last_song.playing_seconds
             self.playback_start_time = datetime.now()
         elif song != last_song:
             is_song_change = True
             self.diaglog.debug("handling, songchange, song: %s (%s); last song: %s (%s)", song, song.playing_status,
                                last_song, last_song.playing_status)
-            # 5.2:: we did switch. Actually I don't care if last song was playing or not. We have to conditionally increment PC.
-            # If last song was playing, add to it's play status
-            if last_song.playing_status == LoggedSong.STATUS_PLAYING:
-                pt = (datetime.now() - self.playback_start_time).seconds
-                self.diaglog.debug("handling, lastsong was playing. Setting playtime to %s", pt)
-                last_song.playing_seconds += pt
+            # 5.2:: we did switch. Actually I don't care if last song was playing or not. We have to conditionally
+   increment PC. # If last song was playing, add to it's play status if last_song.playing_status ==
+   LoggedSong.STATUS_PLAYING: pt = (datetime.now() - self.playback_start_time).seconds self.diaglog.debug("handling,
+   lastsong was playing. Setting playtime to %s", pt) last_song.playing_seconds += pt
             self.conditionally_increment_pc(last_song)
             self.playing_song = song
             self.diaglog.debug("handling, playing song is now %s", self.playing_song)
@@ -192,8 +182,8 @@ void new_song_happened(msw::model::SongWithMetadata&& new_song) {
         if self.playcount_enabled:
             self.diaglog.debug("shutdown - Trying to picke playing song - not none")
             if self.playing_song.playing_status == LoggedSong.STATUS_PLAYING:
-                # We set it to pause. Otherwise on next start it is possible for software to detect as restart playing the same song. And do additional playcount.
-                self.playing_song.playing_status = LoggedSong.STATUS_PAUSE
+                # We set it to pause. Otherwise on next start it is possible for software to detect as restart playing
+   the same song. And do additional playcount. self.playing_song.playing_status = LoggedSong.STATUS_PAUSE
                 self.playing_song.playing_seconds += (datetime.now() - self.playback_start_time).seconds
         pickle_where = os.path.join(os.path.dirname(exec_beets("config -p")), "lastSong.bin")
         with open(pickle_where, "wb") as fp:

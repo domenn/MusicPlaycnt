@@ -1,14 +1,14 @@
 #pragma once
-#include <string>
-#include <vector>
 #include <external/cxxopt.hpp>
 #include <src/win/windows_headers.hpp>
+#include <string>
+#include <vector>
 
 namespace msw::helpers {
 class ParseSongItems;
 
 class Utilities {
-public:
+ public:
   static std::string app_folder();
   static std::string file_in_app_folder(std::string file_name);
   static std::string file_in_app_folder_with_creating_app_folder(std::string file_name);
@@ -22,26 +22,12 @@ public:
   static std::string get_thread_description();
 
   static std::string& ltrim(std::string& s) {
-
-    s.erase(s.begin(),
-            std::find_if(s.begin(),
-                         s.end(),
-                         [](int ch)
-                         {
-                           return !std::isspace(ch);
-                         }));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
     return s;
   }
 
-
   static std::string& rtrim(std::string& s) {
-    s.erase(std::find_if(s.rbegin(),
-                         s.rend(),
-                         [](int ch)
-                         {
-                           return !std::isspace(ch);
-                         }).base(),
-            s.end());
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
     return s;
   }
 
@@ -56,7 +42,7 @@ class CmdParse {
   static constexpr char BAD_VAL[] = " _-1BbB0q0Qa!qQQQ";
 
   class ArgcArgv {
-  public:
+   public:
     const int argc_;
     const char** argv_;
 #ifdef _WIN32
@@ -86,7 +72,7 @@ class CmdParse {
     }
   }
 
-public:
+ public:
   CmdParse(const int argc, const char** argv);
 #ifdef _WIN32
   CmdParse(const wchar_t* lpCmdLine);
@@ -94,4 +80,4 @@ public:
   [[nodiscard]] bool is_listen() const;
   [[nodiscard]] ParseSongItems song_data() const;
 };
-}
+}  // namespace msw::helpers

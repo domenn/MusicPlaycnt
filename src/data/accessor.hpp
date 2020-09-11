@@ -1,21 +1,20 @@
 #pragma once
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 namespace msw::data {
 
 template <typename T_item>
 class Accessor {
-
   std::unique_ptr<T_item> item_;
   // NOTE: Probably useless. In phase of phasing out.
   // void* data_;
 
-  virtual std::unique_ptr<T_item> initial_load_function()= 0;
+  virtual std::unique_ptr<T_item> initial_load_function() = 0;
   virtual void persist(T_item* item) = 0;
 
-public:
+ public:
   explicit Accessor(void* data);
   virtual ~Accessor() = default;
 
@@ -27,6 +26,5 @@ public:
 
   //  virtual msw::model::SongWithMetadata working_item();
   //  virtual void persist();
-
 };
-} // namespace msw::data
+}  // namespace msw::data

@@ -1,15 +1,15 @@
 #pragma once
-#include <string>
-#include <optional>
 #include <memory>
-#include <src/model/song_with_metadata.hpp>
+#include <optional>
 #include <src/misc/read_line_reverse.hpp>
+#include <src/model/song_with_metadata.hpp>
+#include <string>
 
 namespace msw {
 namespace model {
 class AppConfig;
 }
-}
+}  // namespace msw
 
 namespace msw::musicstuffs {
 
@@ -23,10 +23,10 @@ class FooNpLogParser {
 
   msw::model::SongWithMetadata produce();
   void init_lines_reader();
-public:
 
+ public:
   FooNpLogParser(const model::AppConfig& app_config);
 
   explicit operator msw::model::SongWithMetadata();
 };
-} // namespace msw
+}  // namespace msw::musicstuffs

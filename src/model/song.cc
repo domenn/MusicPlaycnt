@@ -2,6 +2,7 @@
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
+#include <google/protobuf/util/message_differencer.h>
 
 #include <src/misc/custom_include_spdlog.hpp>
 #include <sstream>
@@ -10,7 +11,6 @@
 #include "../misc/open_wrap.hpp"
 #include "serializable.hpp"
 #include "src/win/winapi_exceptions.hpp"
-#include <google/protobuf/util/message_differencer.h>
 
 msw::model::Song msw::model::Song::deserialize_from_file(const std::string& file_on_disk) {
   msw_proto_song::Song empty_proto_song;
@@ -31,22 +31,17 @@ msw::model::Song msw::model::Song::deserialize_from_file(const std::string& file
   return empty_proto_song;
 }
 
-msw::model::Song::Song()
-  : proto_song_containing_optional_{std::in_place} {
+msw::model::Song::Song() : proto_song_containing_optional_{std::in_place} {
   underlying_object_ = &proto_song_containing_optional_.value();
 }
 
-msw::model::Song::Song(msw_proto_song::Song&& song)
-  : proto_song_containing_optional_(std::move(song)) {
+msw::model::Song::Song(msw_proto_song::Song&& song) : proto_song_containing_optional_(std::move(song)) {
   underlying_object_ = &proto_song_containing_optional_.value();
 }
 
-msw::model::Song::Song(msw_proto_song::Song* song)
-  : Serializable(song) {
-}
+msw::model::Song::Song(msw_proto_song::Song* song) : Serializable(song) {}
 
-msw::model::Song::Song(std::string album, std::string artist, std::string title, std::string fn)
-  : model::Song() {
+msw::model::Song::Song(std::string album, std::string artist, std::string title, std::string fn) : model::Song() {
   set_album(std::move(album));
   set_artist(std::move(artist));
   set_title(std::move(title));
@@ -77,15 +72,14 @@ const std::string& msw::model::Song::album() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->album();
 }
 
-
-//msw::model::Song::operator msw_proto_song::Song&&() {
+// msw::model::Song::operator msw_proto_song::Song&&() {
 //  if (proto_song_containing_optional_) {
 //    return std::move(proto_song_containing_optional_.value());
 //  }
 //  return reinterpret_cast<msw_proto_song::Song&&>(*underlying_object_);
 //}
 
-//void msw::model::Song::take_protobuf_song_out(std::function<void(msw_proto_song::Song*)> receiver) {
+// void msw::model::Song::take_protobuf_song_out(std::function<void(msw_proto_song::Song*)> receiver) {
 //  receiver(reinterpret_cast<msw_proto_song::Song*>(underlying_object_));
 //  if (proto_song_containing_optional_) {
 //    proto_song_containing_optional_.reset();
@@ -104,6 +98,4 @@ bool msw::model::operator==(const Song& lhs, const Song& rhs) {
   return google::protobuf::util::MessageDifferencer::Equals(*lhs.underlying_object_, *rhs.underlying_object_);
 }
 
-bool msw::model::operator!=(const Song& lhs, const Song& rhs) {
-  return !(lhs == rhs);
-}
+bool msw::model::operator!=(const Song& lhs, const Song& rhs) { return !(lhs == rhs); }

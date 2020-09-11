@@ -24,8 +24,6 @@ class ProductionAccessor : public msw::data::Accessor<T> {
   void persist(T* item) override;
 
  public:
-  ProductionAccessor(model::AppConfig& app_config
-  , const std::string& path_for_disk_storage
-  );
+  ProductionAccessor(model::AppConfig& app_config, const std::string& path_for_disk_storage);
 };
 }  // namespace msw::data

@@ -12,20 +12,20 @@ class Message;
 namespace io {
 class ZeroCopyOutputStream;
 class FileOutputStream;
-} // namespace io
-} // namespace protobuf
-} // namespace google
+}  // namespace io
+}  // namespace protobuf
+}  // namespace google
 
 namespace msw {
 
 class Serializable {
-protected:
+ protected:
   google::protobuf::Message* underlying_object_{};
 
   explicit Serializable(google::protobuf::Message* underlying_object);
   Serializable() = default;
 
-public:
+ public:
   std::string serialize();
   void serialize(std::string output_path);
   template <typename T>
@@ -41,12 +41,11 @@ public:
     return empty_proto_thing;
   }
 
-private:
+ private:
   google::protobuf::io::FileOutputStream open_file_for_writing(const std::string& path);
   static google::protobuf::io::FileInputStream open_file_for_reading(const std::string& path);
   void serialize_impl(google::protobuf::io::ZeroCopyOutputStream& output_stream);
   void read_impl(google::protobuf::io::ZeroCopyInputStream& input_stream);
   static void deserialize_string_impl(const std::string& contents, google::protobuf::Message* msg);
-
 };
-} // namespace msw
+}  // namespace msw

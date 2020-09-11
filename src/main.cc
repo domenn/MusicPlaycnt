@@ -19,6 +19,7 @@
 namespace msw::pg {
 data::Accessor<msw::model::SongList>* song_list;
 data::Accessor<msw::model::SongWithMetadata>* handled_song;
+msw::model::AppConfig* app_config;
 } // namespace msw::pg
 
 msw::model::AppConfig get_or_create_config() {

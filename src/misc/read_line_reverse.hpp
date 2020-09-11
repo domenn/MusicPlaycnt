@@ -1,8 +1,7 @@
 #pragma once
-#include <vector>
 #include <fstream>
 #include <memory>
-
+#include <vector>
 
 class ReadLineReverse {
   std::unique_ptr<std::istream> istream_{};
@@ -29,13 +28,11 @@ class ReadLineReverse {
 
   void find_rightmost_newline();
   void advance_indices();
-public:
 
-
+ public:
   explicit ReadLineReverse(std::unique_ptr<std::istream> istream);
 
   std::string next();
-
 
   ReadLineReverse(const ReadLineReverse& other) = delete;
 
@@ -43,8 +40,7 @@ public:
   ReadLineReverse& operator=(const ReadLineReverse& other) = delete;
 
   ReadLineReverse& operator=(ReadLineReverse&& other) noexcept {
-    if (this == &other)
-      return *this;
+    if (this == &other) return *this;
     istream_ = std::move(other.istream_);
     buffer_ = std::move(other.buffer_);
     reverse_idx_start_of_line_that_is_to_be_read_next_ = other.reverse_idx_start_of_line_that_is_to_be_read_next_;

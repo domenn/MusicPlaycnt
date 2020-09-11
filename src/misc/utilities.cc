@@ -1,31 +1,34 @@
 #include "utilities.hpp"
-#include <src/win/windows_headers.hpp>
-#include <src/win/winapi_exceptions.hpp>
 
 #include <sago/platform_folders.h>
+
+#include <src/win/winapi_exceptions.hpp>
+#include <src/win/windows_headers.hpp>
+
 #include "consts.hpp"
-#include "src/win/encoding.hpp"
 #include "src/model/song.hpp"
+#include "src/win/encoding.hpp"
 
 #ifdef _WIN32
 #include <shellapi.h>
 #else
-#define THROW_IF_ERROR_LINUX                                                             \
-    if (!was_success) {                                                                  \
-         assert(0 && "Untested here. finalizer unique ptr -- needs debugging and custom deleter.");          \
-        if (error != nullptr) {                                                          \
-                  std::unique_ptr<GError, decltype(&g_error_free)> finalizer(error, g_error_free);    \
-            throw d_common::exc::OsApiException(fmt::format(                              \
-                "Error: {}{}{}{}; More info: GQuark domain={};; gint code={};; "         \
-                "gchar* message={}",                                                     \
-                D_U_M_FUNC_FILE_LINE_TRACE_IN_FMT, error->domain, error->code,           \
-                error->message));                                                        \
-        } else {                                                                         \
-            throw d_common::exc::ProcessRunnerException(                                          \
-                fmt::format("Unknown error during linux app_exec operation!\n {}{}{}{}", \
-                            D_U_M_FUNC_FILE_LINE_TRACE_IN_FMT));                         \
-        }                                                                                \
-    }
+#define THROW_IF_ERROR_LINUX                                                                                \
+  if (!was_success) {                                                                                       \
+    assert(0 && "Untested here. finalizer unique ptr -- needs debugging and custom deleter.");              \
+    if (error != nullptr) {                                                                                 \
+      std::unique_ptr<GError, decltype(&g_error_free)> finalizer(error, g_error_free);                      \
+      throw d_common::exc::OsApiException(                                                                  \
+          fmt::format("Error: {}{}{}{}; More info: GQuark domain={};; gint code={};; "                      \
+                      "gchar* message={}",                                                                  \
+                      D_U_M_FUNC_FILE_LINE_TRACE_IN_FMT,                                                    \
+                      error->domain,                                                                        \
+                      error->code,                                                                          \
+                      error->message));                                                                     \
+    } else {                                                                                                \
+      throw d_common::exc::ProcessRunnerException(fmt::format(                                              \
+          "Unknown error during linux app_exec operation!\n {}{}{}{}", D_U_M_FUNC_FILE_LINE_TRACE_IN_FMT)); \
+    }                                                                                                       \
+  }
 #endif
 
 namespace co = msw::consts::cmdoptions;
@@ -44,9 +47,9 @@ void create_folder(const std::string& file_name) {
     throw msw::exceptions::WinApiError(errno, "_wmkdir", MSW_TRACE_ENTRY_CREATE);
   }
 #else
-    if(mkdir(file_name.c_str(),mode)){
-        throw msw::exceptions::ErrorCode (errno, "mkdir", MSW_TRACE_ENTRY_CREATE);
-    }
+  if (mkdir(file_name.c_str(), mode)) {
+    throw msw::exceptions::ErrorCode(errno, "mkdir", MSW_TRACE_ENTRY_CREATE);
+  }
 #endif
 }
 
@@ -81,8 +84,8 @@ std::pair<std::basic_string<char_t>, std::basic_string<char_t>> msw::helpers::Ut
     const auto idx = path.find_last_of(get_file_separator<char_t>());
     return std::make_pair(path.substr(0, idx), path.substr(idx + 1));
   } catch (const std::exception& x) {
-    const std::string msg = "Getting parent folder of " + encoding::ensure_utf8(std::move(path)) + " failed. Exception "
-                            + typeid(x).name() + " was thrown:\n " + x.what();
+    const std::string msg = "Getting parent folder of " + encoding::ensure_utf8(std::move(path)) +
+                            " failed. Exception " + typeid(x).name() + " was thrown:\n " + x.what();
     throw msw::exceptions::ApplicationError(msg.c_str(), MSW_TRACE_ENTRY_CREATE);
   }
 }
@@ -93,7 +96,7 @@ void msw::helpers::Utilities::start_non_executable_file(const std::string& path)
   ShellExecuteW(0, 0, filename_win_frindly.c_str(), 0, 0, SW_SHOW);
 #else
   gboolean was_success;
-  GError *error = nullptr;
+  GError* error = nullptr;
 
 #if GLIB_CHECK_VERSION(2, 36, 0)
   D_DLOGT("Glib is quite new ... no need to g_type_init()");
@@ -102,10 +105,7 @@ void msw::helpers::Utilities::start_non_executable_file(const std::string& path)
 #endif
 
   was_success = g_app_info_launch_default_for_uri(
-      ("file://" +
-          std::filesystem::canonical(std::filesystem::path(path)).generic_string())
-          .c_str(),
-      NULL, &error);
+      ("file://" + std::filesystem::canonical(std::filesystem::path(path)).generic_string()).c_str(), NULL, &error);
   THROW_IF_ERROR_LINUX
 #endif
 }
@@ -151,53 +151,43 @@ msw::helpers::CmdParse::ArgcArgv msw::helpers::CmdParse::ArgcArgv::from_wstring(
 cxxopts::Options msw::helpers::CmdParse::create_options() {
   cxxopts::Options options(msw::consts::PROGRAM_NAME_SHORT, msw::consts::CLI_PROGRAM_DESCTIPTION);
   options.add_options()(co::listen_B, "Listener for file. Tray app.");
-  options.add_options()(co::artist_B, "Artist of current song.", cxxopts::value<std::string>()
-      ->default_value(""));
-  options.add_options()(co::album_B, "Album of current song.", cxxopts::value<std::string>()
-      );
-  options.add_options()(co::title_B, "Title of current song.", cxxopts::value<std::string>()
-      ->default_value(""));
-  options.add_options()(co::path_B, "Path of current song.", cxxopts::value<std::string>()
-      ->default_value(""));
+  options.add_options()(co::artist_B, "Artist of current song.", cxxopts::value<std::string>()->default_value(""));
+  options.add_options()(co::album_B, "Album of current song.", cxxopts::value<std::string>());
+  options.add_options()(co::title_B, "Title of current song.", cxxopts::value<std::string>()->default_value(""));
+  options.add_options()(co::path_B, "Path of current song.", cxxopts::value<std::string>()->default_value(""));
   return options;
 }
 
 void msw::helpers::CmdParse::try_get_throw(const std::string& parameter_name,
                                            const char* const as_name,
                                            const std::exception& thrown_x) {
-  throw msw::exceptions::ApplicationError(("Commandline issue getting "
-                                           + parameter_name + " of type " + as_name + ". Exception thrown \"" +
-                                           thrown_x.what() + "\"\n  Of type: \"" + typeid(thrown_x).name()).c_str(),
-                                          MSW_TRACE_ENTRY_CREATE
-      );
+  throw msw::exceptions::ApplicationError(
+      ("Commandline issue getting " + parameter_name + " of type " + as_name + ". Exception thrown \"" +
+       thrown_x.what() + "\"\n  Of type: \"" + typeid(thrown_x).name())
+          .c_str(),
+      MSW_TRACE_ENTRY_CREATE);
 }
 
 msw::helpers::CmdParse::CmdParse(const int argc, const char** argv)
-  : argc_argv_{argc, argv},
-    options_(create_options()),
-    result_(options_.parse(const_cast<int&>(argc_argv_.argc_), const_cast<char**&>(argc_argv_.argv_))) {
-}
+    : argc_argv_{argc, argv},
+      options_(create_options()),
+      result_(options_.parse(const_cast<int&>(argc_argv_.argc_), const_cast<char**&>(argc_argv_.argv_))) {}
 
 #ifdef _WIN32
 msw::helpers::CmdParse::CmdParse(const wchar_t* lpCmdLine)
-  : argc_argv_(ArgcArgv::from_wstring(lpCmdLine)),
-    options_(create_options()),
-    result_(options_.parse(const_cast<int&>(argc_argv_.argc_), const_cast<char**&>(argc_argv_.argv_))) {
-}
+    : argc_argv_(ArgcArgv::from_wstring(lpCmdLine)),
+      options_(create_options()),
+      result_(options_.parse(const_cast<int&>(argc_argv_.argc_), const_cast<char**&>(argc_argv_.argv_))) {}
 #endif
 
-bool msw::helpers::CmdParse::is_listen() const {
-  return result_[co::listen_LO].as<bool>();
-}
+bool msw::helpers::CmdParse::is_listen() const { return result_[co::listen_LO].as<bool>(); }
 
 msw::helpers::ParseSongItems msw::helpers::CmdParse::song_data() const {
-  return {
-      try_get<std::string>(co::artist_LO),
-    try_get<std::string>(co::album_LO),
-      try_get<std::string>(co::title_LO),
-      try_get<std::string>(co::path_LO)};
+  return {try_get<std::string>(co::artist_LO),
+          try_get<std::string>(co::album_LO),
+          try_get<std::string>(co::title_LO),
+          try_get<std::string>(co::path_LO)};
 }
-
 
 template std::pair<std::string, std::string> msw::helpers::Utilities::get_parent_folder_and_filename(
     const std::string& path);

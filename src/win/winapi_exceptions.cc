@@ -1,9 +1,10 @@
 // ReSharper disable once CppUnusedIncludeDirective
+#include "winapi_exceptions.hpp"
+
 #include <src/win/windows_headers.hpp>
 
-#include "winapi_exceptions.hpp"
-#include "windows_error_format.hpp"
 #include "encoding.hpp"
+#include "windows_error_format.hpp"
 
 using namespace std::literals::string_literals;
 
@@ -22,11 +23,8 @@ char const* msw::exceptions::ApplicationError::what() const noexcept {
 }
 
 #ifdef _WIN32
-std::wstring msw::exceptions::ApplicationError::what_w() const {
-  return msw::encoding::utf8_to_utf16(what());
-}
+std::wstring msw::exceptions::ApplicationError::what_w() const { return msw::encoding::utf8_to_utf16(what()); }
 #endif
-
 
 char const* msw::exceptions::ErrorCode::what() const noexcept {
   // ReSharper disable once CppExpressionWithoutSideEffects
@@ -35,13 +33,9 @@ char const* msw::exceptions::ErrorCode::what() const noexcept {
   return cached_what_.c_str();
 }
 
-bool msw::exceptions::ErrorCode::is_enoent() const {
-  return error_code_ == ENOENT;
-}
+bool msw::exceptions::ErrorCode::is_enoent() const { return error_code_ == ENOENT; }
 
-bool msw::exceptions::ErrorCode::is_already_exists() const {
-  return error_code_ == EEXIST;
-}
+bool msw::exceptions::ErrorCode::is_already_exists() const { return error_code_ == EEXIST; }
 
 char const* msw::exceptions::WinApiError::what() const noexcept {
   // ReSharper disable once CppExpressionWithoutSideEffects

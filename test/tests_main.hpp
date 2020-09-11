@@ -1,10 +1,11 @@
 #pragma once
 
+#include <src/win/windows_headers.hpp>
+
+#include <fmt/ostream.h>
 #include <gtest/gtest.h>
 
 #include <src/misc/spd_logging.hpp>
-#include <src/win/windows_headers.hpp>
-
 #include <src/misc/utilities.hpp>
 #include <src/model/app_config.hpp>
 #include <src/model/song.hpp>
@@ -46,9 +47,16 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_pair("Tue Sep 08 13:36:15 2020;playing: ? ;; ? ;; Evermore ;;; C:\\pathTo.mp3"s, ""s),
         std::make_pair("Tue Sep 08 13:36:15 2020;playing:  ;;  ;; Evermore ;;; C:\\pathTo.mp3"s, ""s),
         std::make_pair("Tue Sep 08 13:36:15 2020;playing:   ;;   ;; Evermore ;;; C:\\pathTo.mp3"s, " "s),
-        std::make_pair("Tue Sep 09 16:22:11 2020;playing: a ;; b ;; c ;;; d\nTue Sep 10 11:23:47 2020;stopped: e ;; f ;; g ;;; h"s, "b"s),
-        std::make_pair("Tue Sep 09 16:22:11 2020;playing: a ;; b ;; c ;;; d\nTue Sep 10 11:23:47 2020;paused: e ;; f ;; g ;;; h"s, "f"s)
-    ));
+        std::make_pair(
+            "Tue Sep 09 16:22:11 2020;playing: a ;; b ;; c ;;; d\nTue Sep 10 11:23:47 2020;stopped: e ;; f ;; g ;;; h"s,
+            "b"s),
+        std::make_pair(
+            "Tue Sep 09 16:22:11 2020;playing: a ;; b ;; c ;;; d\nTue Sep 10 11:23:47 2020;paused: e ;; f ;; g ;;; h"s,
+            "f"s),
+
+        std::make_pair("Tue Sep 10 19:22:11 2020;playing: a ;; b ;; c ;;; d\nnot running"s, "b"s))
+
+);
 
 TEST(Fundamental, createSaveAndRestore) {
   msw_proto_song::Song proto_song;
@@ -116,6 +124,37 @@ TEST(Cli, emptyAlbum) {
   msw::helpers::CmdParse cmd_parse(L"swName --artist 1 --album   \"\" --title ßtrangeTitleš --path C:\\one\\two");
   Song a_song = std::make_from_tuple<Song>(cmd_parse.song_data().to_tuple());
   ASSERT_EQ("", a_song.album());
+}
+
+TEST(Misc, stackTraceOstreamDoesntCrash) {
+  const msw::exceptions::AppStackWalker app_stack_walker;
+  std::ostringstream one;
+  one << app_stack_walker;
+  SPDLOG_INFO(one.str());
+  ASSERT_TRUE(one.str().length() > 0);
+}
+
+TEST(Misc, stackTraceOstreamDifferentSizes) {
+  msw::exceptions::AppStackWalker app_stack_walker;
+
+  std::vector<std::string> v(50);
+  int generate_i = 0;
+  std::generate(v.begin(), v.end(), [&generate_i]() { return "__gend .. " + std::to_string(generate_i++); });
+
+  app_stack_walker.set_custom_value(std::move(v));
+  SPDLOG_INFO("Attempt1: {}", app_stack_walker);
+
+  app_stack_walker.set_custom_value({"one", "two", "three"});
+  SPDLOG_INFO("Attempt2: {}", app_stack_walker);
+
+  app_stack_walker.set_custom_value({"one"});
+  SPDLOG_INFO("Attempt3: {}", app_stack_walker);
+
+  app_stack_walker.set_custom_value({});
+  SPDLOG_INFO("Attempt4 (empty): {}", app_stack_walker);
+
+  app_stack_walker.set_custom_value({"final_one"});
+  SPDLOG_INFO("Attempt4 .. final one: {}", app_stack_walker);
 }
 
 // class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {

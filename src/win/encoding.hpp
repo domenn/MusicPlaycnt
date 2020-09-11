@@ -14,4 +14,4 @@ std::string ensure_utf8(std::basic_string<char_t> input) {
   }
 }
 
-}
+}  // namespace msw::encoding

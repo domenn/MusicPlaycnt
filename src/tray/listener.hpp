@@ -1,12 +1,13 @@
 #pragma once
+
+#include <src/win/windows_headers.hpp>
 #include <string>
-#include <minwindef.h>
+
 
 namespace msw::tray {
 class Tray;
 
 class Listener {
-
   Tray* tray_;
   std::wstring folder_{};
   std::wstring file_{};
@@ -15,11 +16,10 @@ class Listener {
 
   static VOID CALLBACK my_wait_or_timer_cb(PVOID lpParameter, BOOLEAN TimerOrWaitFired);
 
-public:
+ public:
   Listener(Tray* tray);
 
   template <bool first = false>
   void listen();
-
 };
-}
+}  // namespace msw::tray

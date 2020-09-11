@@ -38,7 +38,7 @@ inline std::string current_time_h_m_s_ms() {
   auto now = std::chrono::system_clock::now();
   auto ss = format_some_input("%H:%M:%S", now);
   ss << '.' << std::setfill('0') << std::setw(3)
-      << (std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000).count();
+     << (std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000).count();
   return ss.str();
 }
 
@@ -50,5 +50,5 @@ inline uint64_t parse_from_string(const std::string& str, const char* const form
   ss >> std::get_time(&tm, format);
   return std::chrono::system_clock::from_time_t(std::mktime(&tm)).time_since_epoch() / std::chrono::milliseconds(1);
 }
-} // namespace msw::helpers
+}  // namespace msw::helpers
 #undef FUNC_LOCALTIME

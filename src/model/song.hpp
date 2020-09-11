@@ -25,7 +25,7 @@ struct ParseSongItems {
     return std::make_tuple(std::move(album), std::move(artist), std::move(title), std::move(path));
   }
 };
-} // namespace helpers
+}  // namespace helpers
 
 namespace model {
 class Song : public Serializable {
@@ -33,7 +33,7 @@ class Song : public Serializable {
   // actual protobuf message.
   std::optional<msw_proto_song::Song> proto_song_containing_optional_{};
 
-public:
+ public:
   Song();
   Song(msw_proto_song::Song&& song);
   Song(msw_proto_song::Song* song);
@@ -58,5 +58,5 @@ public:
   operator msw_proto_song::Song*() const;
   // operator msw_proto_song::Song();
 };
-} // namespace model
-} // namespace msw
+}  // namespace model
+}  // namespace msw

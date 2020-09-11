@@ -7,9 +7,9 @@
 
 namespace msw::model {
 
-//class MyStringIterator {
+// class MyStringIterator {
 //  int num = 0;
-//public:
+// public:
 //  MyStringIterator(long _num = 0)
 //    : num(_num) {
 //  }
@@ -38,19 +38,16 @@ namespace msw::model {
 
 class AppConfig : public Serializable {
   msw_proto_cfg::PlaycntConfig proto_app_config_{};
-public:
+
+ public:
   class DelimiterIterable {
     const AppConfig* app_config_;
     int idx_{};
-  public:
-    DelimiterIterable(const AppConfig* app_config)
-      : app_config_(app_config) {
-    }
 
-    DelimiterIterable(const AppConfig* app_config, int idx)
-      : app_config_(app_config),
-        idx_(idx) {
-    }
+   public:
+    DelimiterIterable(const AppConfig* app_config) : app_config_(app_config) {}
+
+    DelimiterIterable(const AppConfig* app_config, int idx) : app_config_(app_config), idx_(idx) {}
 
     DelimiterIterable begin() const;
     DelimiterIterable end() const;
@@ -68,8 +65,8 @@ public:
 
     bool operator==(DelimiterIterable other) const { return idx_ == other.idx_; }
     bool operator!=(DelimiterIterable other) const { return !(*this == other); }
-    const std::string& operator*() const ;
-    const std::string* operator->() const ;
+    const std::string& operator*() const;
+    const std::string* operator->() const;
     // iterator traits
     using difference_type = int;
     using value_type = const std::string;
@@ -78,14 +75,12 @@ public:
     using iterator_category = std::forward_iterator_tag;
   };
 
-  //static AppConfig& instance() {
+  // static AppConfig& instance() {
   //  static AppConfig instance;
   //  return instance;
   //}
 
-  AppConfig()
-    : Serializable(&proto_app_config_) {
-  }
+  AppConfig() : Serializable(&proto_app_config_) {}
 
   ~AppConfig() = default;
   void set_delimiters(std::vector<std::string> delimiters);
@@ -104,4 +99,4 @@ public:
   std::vector<std::string> delimiters() const;
   DelimiterIterable iterate_delimiters() const;
 };
-} // namespace msw::model
+}  // namespace msw::model

@@ -6,8 +6,7 @@
 template <typename T>
 msw::data::Accessor<T>::Accessor(void* data)
 //   : data_(data)
-{
-}
+{}
 
 template <typename T>
 void msw::data::Accessor<T>::write(std::function<void(T*)> mutator) {
@@ -30,7 +29,7 @@ template <typename T>
 void msw::data::Accessor<T>::replace(T* replacement_item) {
   if (!item_) {
     item_ = std::make_unique<T>(std::move(*replacement_item));
-  }else {
+  } else {
     *item_ = std::move(*replacement_item);
   }
   persist(item_.get());
