@@ -5,7 +5,6 @@
 #include <google/protobuf/util/message_differencer.h>
 
 #include <src/misc/custom_include_spdlog.hpp>
-#include <sstream>
 #include <utility>
 
 #include "../misc/open_wrap.hpp"

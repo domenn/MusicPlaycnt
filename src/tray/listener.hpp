@@ -3,7 +3,6 @@
 #include <src/win/windows_headers.hpp>
 #include <string>
 
-
 namespace msw::tray {
 class Tray;
 

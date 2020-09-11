@@ -110,8 +110,7 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         get_tray_from_window(hwnd)->on_exit();
       case CUSTOM_CHANGE_NOTIFY:
         SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
-        do_things::new_song_happened(static_cast<msw::model::SongWithMetadata>(
-            msw::musicstuffs::FooNpLogParser(get_tray_from_window(hwnd)->config())));
+        do_things::new_song_happened(static_cast<msw::model::SongWithMetadata>(msw::musicstuffs::FooNpLogParser()));
 
         get_tray_from_window(hwnd)->listener_.listen();
         return 0;
@@ -229,4 +228,4 @@ void Tray::send_windows_message(UINT msg) const {
   }
 }
 
-Tray::Tray(HINSTANCE hinstance, const model::AppConfig& cfg) : hinstance_(hinstance), cfg_(cfg), listener_(this) {}
+Tray::Tray(HINSTANCE hinstance) : hinstance_(hinstance), listener_(this) {}

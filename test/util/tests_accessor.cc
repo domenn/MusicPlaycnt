@@ -1,12 +1,11 @@
 #include "tests_accessor.hpp"
 
-#include <src/model/song_with_metadata.hpp>
 #include <src/data/pointers_to_globals.hpp>
+#include <src/model/song_with_metadata.hpp>
 
 namespace msw::pg {
 data::DataForTests* data_for_tests;
-} // namespace msw::pg
-
+}  // namespace msw::pg
 
 template <typename T>
 std::unique_ptr<T> msw::data::TestsAccessor<T>::initial_load_function() {
@@ -19,10 +18,8 @@ void msw::data::TestsAccessor<T>::persist(T* item) {
 }
 
 template <typename T>
-msw::data::TestsAccessor<T>::TestsAccessor()
-  : Accessor<T>(&inst_data_) {
+msw::data::TestsAccessor<T>::TestsAccessor() : Accessor<T>(&inst_data_) {
   msw::pg::data_for_tests = &inst_data_;
 }
-
 
 template class msw::data::TestsAccessor<msw::model::SongWithMetadata>;

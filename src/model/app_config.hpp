@@ -1,5 +1,8 @@
 #pragma once
+#include <src/win/windows_headers.hpp>
+
 #include <src/protobufs/app_config.pb.h>
+
 
 #include <string>
 

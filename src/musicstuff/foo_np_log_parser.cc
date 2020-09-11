@@ -1,6 +1,7 @@
 #include "foo_np_log_parser.hpp"
 
 #include <algorithm>
+#include <src/data/pointers_to_globals.hpp>
 #include <src/misc/consts.hpp>
 #include <src/misc/utilities.hpp>
 #include <src/misc/utiltime.hpp>
@@ -29,7 +30,7 @@ msw::model::SongWithMetadata msw::musicstuffs::FooNpLogParser::produce() {
   return song_with_metadata;
 }
 
-msw::musicstuffs::FooNpLogParser::FooNpLogParser(const model::AppConfig& app_config) : app_config_(app_config) {}
+msw::musicstuffs::FooNpLogParser::FooNpLogParser() = default;
 
 msw::musicstuffs::FooNpLogParser::operator msw::model::SongWithMetadata() {
   try {
@@ -41,7 +42,7 @@ msw::musicstuffs::FooNpLogParser::operator msw::model::SongWithMetadata() {
     // A little unsafe. write_ptr iterates my variables, so they must not be reordered and things like that.
     std::string* write_ptr = &timestamp_;
     size_t idx_delim_end = 0;
-    for (const std::string& delim : app_config_.iterate_delimiters()) {
+    for (const std::string& delim : msw::pg::app_config->iterate_delimiters()) {
       const size_t idx_delim_start = line.find(delim, idx_delim_end);
       write_ptr->operator=(line.substr(idx_delim_end, idx_delim_start - idx_delim_end));
       if ((*write_ptr) == "?") {

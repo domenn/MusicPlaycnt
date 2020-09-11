@@ -1,7 +1,10 @@
-#pragma once
+﻿#pragma once
 
+// clang-format off
+//  ↳ windows headers must be included before shellapi!
 #include <src/win/windows_headers.hpp>
 #include <shellapi.h>
+// clang-format on
 
 #include "listener.hpp"
 
@@ -17,7 +20,6 @@ class Tray {
   HMENU menu_to_display_{};
   HWND hwnd_{};
 
-  const model::AppConfig& cfg_;
   Listener listener_;
 
   NOTIFYICONDATA create_notifyicondata_structure(HICON icon);
@@ -37,8 +39,7 @@ class Tray {
  public:
   int run_message_loop();
   void send_windows_message(UINT msg) const;
-  const model::AppConfig& config() const { return cfg_; }
-  Tray(HINSTANCE hinstance, const model::AppConfig& cfg);
+  Tray(HINSTANCE hinstance);
 };
 
 inline Tray* Tray::get_tray_from_window(HWND hwnd) {

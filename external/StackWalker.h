@@ -41,7 +41,11 @@
 // so we need not to check the version (because we only support _MSC_VER >= 1100)!
 #pragma once
 
-#include <windows.h>
+// clang-format off
+#include <src/win/windows_headers.hpp>
+#include <tchar.h>
+// clang-format off
+
 
 #if _MSC_VER >= 1900
 #pragma warning(disable : 4091)
@@ -242,14 +246,13 @@ protected:
 
 // The following is defined for x86 (XP and higher), x64 and IA64:
 #define GET_CURRENT_CONTEXT_STACKWALKER_CODEPLEX(c, contextFlags) \
-  do                                                              \
-  {                                                               \
+  do {                                                            \
     memset(&c, 0, sizeof(CONTEXT));                               \
     c.ContextFlags = contextFlags;                                \
     RtlCaptureContext(&c);                                        \
   } while (0);
 #endif
 
-#endif //defined(_MSC_VER)
+#endif  // defined(_MSC_VER)
 
-#endif // __STACKWALKER_H__
+#endif  // __STACKWALKER_H__

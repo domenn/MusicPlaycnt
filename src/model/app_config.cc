@@ -2,8 +2,8 @@
 
 #include <sago/platform_folders.h>
 
-#include "src/misc/consts.hpp"
-#include "src/misc/utilities.hpp"
+#include <src/misc/consts.hpp>
+#include <src/misc/utilities.hpp>
 
 void msw::model::AppConfig::set_library_path(const std::string& path) { proto_app_config_.set_librarypath(path); }
 

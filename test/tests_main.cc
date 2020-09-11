@@ -1,20 +1,19 @@
+
+// clang-format off
+#include <src/misc/consts.hpp>
+#include <src/win/windows_headers.hpp>
+// clang-format on
 #include "tests_main.hpp"
 
 #include <sago/platform_folders.h>
 
 #include <src/data/accessor.hpp>
-#include <src/misc/consts.hpp>
 #include <src/misc/utilities.hpp>
 #include <src/model/song_list.hpp>
 #include <src/model/song_with_metadata.hpp>
 #include <test/util/tests_accessor.hpp>
 
 #include "persistence_test.hpp"
-
-namespace msw::pg {
-data::Accessor<msw::model::SongList>* song_list;
-data::Accessor<msw::model::SongWithMetadata>* handled_song;
-}  // namespace msw::pg
 
 using string = std::string;
 

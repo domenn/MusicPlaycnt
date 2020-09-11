@@ -1,10 +1,9 @@
 #pragma once
 
-#include <src/win/windows_headers.hpp>
-
 #include <fmt/ostream.h>
 #include <gtest/gtest.h>
 
+#include <src/data/pointers_to_globals.hpp>
 #include <src/misc/spd_logging.hpp>
 #include <src/misc/utilities.hpp>
 #include <src/model/app_config.hpp>
@@ -22,8 +21,7 @@ class MockFooNpLogParser : public msw::musicstuffs::FooNpLogParser {
  public:
   const std::string line_to_parse_;
 
-  MockFooNpLogParser(const msw::model::AppConfig& app_config, std::string line_to_parse)
-      : FooNpLogParser(app_config), line_to_parse_(std::move(line_to_parse)) {}
+  MockFooNpLogParser(std::string line_to_parse) : FooNpLogParser(), line_to_parse_(std::move(line_to_parse)) {}
 };
 
 class FoobarLineParse : public testing::TestWithParam<std::pair<std::string, std::string>> {};
@@ -32,7 +30,8 @@ TEST_P(FoobarLineParse, emptyStringsCmd) {
   const auto& param_pair = GetParam();
   msw::model::AppConfig tests_config;
   tests_config.set_my_defaults();
-  MockFooNpLogParser parser(tests_config, param_pair.first);
+  msw::pg::app_config = &tests_config;
+  MockFooNpLogParser parser(param_pair.first);
   msw::model::SongWithMetadata smd{parser};
   ASSERT_EQ(smd.get_song().album(), param_pair.second);
 }

@@ -1,13 +1,12 @@
 #include "utilities.hpp"
 
-#include <sago/platform_folders.h>
-
+#include <src/data/pointers_to_globals.hpp>
+#include <src/model/song.hpp>
+#include <src/win/encoding.hpp>
 #include <src/win/winapi_exceptions.hpp>
 #include <src/win/windows_headers.hpp>
 
 #include "consts.hpp"
-#include "src/model/song.hpp"
-#include "src/win/encoding.hpp"
 
 #ifdef _WIN32
 #include <shellapi.h>
@@ -188,6 +187,12 @@ msw::helpers::ParseSongItems msw::helpers::CmdParse::song_data() const {
           try_get<std::string>(co::title_LO),
           try_get<std::string>(co::path_LO)};
 }
+
+namespace msw::pg {
+data::Accessor<msw::model::SongList>* song_list;
+data::Accessor<msw::model::SongWithMetadata>* handled_song;
+msw::model::AppConfig* app_config;
+}  // namespace msw::pg
 
 template std::pair<std::string, std::string> msw::helpers::Utilities::get_parent_folder_and_filename(
     const std::string& path);

@@ -1,10 +1,11 @@
 #pragma once
 
 #include <optional>
+// windows headers required to silence some warnings.
+#include <src/win/windows_headers.hpp>
 
 #include "../protobufs/songs.pb.h"
 #include "serializable.hpp"
-
 namespace msw {
 namespace helpers {
 typedef std::tuple<std::string, std::string, std::string, std::string> AsTupleCmdSongItems;

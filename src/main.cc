@@ -12,15 +12,8 @@
 #include "misc/utilities.hpp"
 #include "model/app_config.hpp"
 #include "musicstuff/foo_np_log_parser.hpp"
-#include "tray/listener.hpp"
 #include "tray/tray.hpp"
 #include "win/winapi_exceptions.hpp"
-
-namespace msw::pg {
-data::Accessor<msw::model::SongList>* song_list;
-data::Accessor<msw::model::SongWithMetadata>* handled_song;
-msw::model::AppConfig* app_config;
-} // namespace msw::pg
 
 msw::model::AppConfig get_or_create_config() {
   try {
@@ -48,10 +41,10 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
 int main(int argc, char** argv) {
 #endif
   spdl::spdlog_setup(spdl::SpdlogConfig::build()
-                     .default_logger_name("NewMusicTrackerCounter")
-                     .file_name("NewMusicTrackerCounter.log")
-                     .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
-                     .log_to_file(true));
+                         .default_logger_name("NewMusicTrackerCounter")
+                         .file_name("NewMusicTrackerCounter.log")
+                         .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
+                         .log_to_file(true));
 #ifdef _DLL
   SetThreadDescription(GetCurrentThread(), L"MainThread");
 #endif
@@ -61,12 +54,13 @@ int main(int argc, char** argv) {
   msw::helpers::CmdParse cmd_parse(argc, argv);
 #endif
   auto cfg = get_or_create_config();
+  msw::pg::app_config = &cfg;
 
   msw::data::ProductionAccessor<msw::model::SongWithMetadata> inst_handled_song(cfg, cfg.stored_state_path());
   msw::pg::handled_song = &inst_handled_song;
 
   if (cmd_parse.is_listen()) {
-    msw::tray::Tray main_tray(hInstance, cfg);
+    msw::tray::Tray main_tray(hInstance);
 
     return main_tray.run_message_loop();
   }
@@ -79,5 +73,6 @@ int main(int argc, char** argv) {
 std::string msw::helpers::Utilities::app_folder() { return sago::getConfigHome() + '/' + consts::PROGRAM_NAME_SHORT; }
 
 void msw::musicstuffs::FooNpLogParser::init_lines_reader() {
-  reverse_line_reader_.emplace(std::make_unique<std::ifstream>(app_config_.file_to_listen(), std::ios::binary));
+  reverse_line_reader_.emplace(
+      std::make_unique<std::ifstream>(msw::pg::app_config->file_to_listen(), std::ios::binary));
 }

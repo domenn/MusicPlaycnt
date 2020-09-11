@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
 
-namespace msw{
-class StringProvider{
+namespace msw {
+class StringProvider {
   int seq = 0;
 
  public:
@@ -10,4 +10,4 @@ class StringProvider{
 
   std::tuple<std::string, std::string, std::string, std::string> four_strings(std::string&& prefix = "");
 };
-}
+}  // namespace msw

@@ -19,7 +19,7 @@ class Accessor;
 namespace pg {
 extern data::Accessor<msw::model::SongList>* song_list;
 extern data::Accessor<msw::model::SongWithMetadata>* handled_song;
-extern msw::model::AppConfig* app_config;;
+extern msw::model::AppConfig* app_config;
 
 // optional, only used in tests. Should cause linker error if used in non-test.
 extern data::DataForTests* data_for_tests;

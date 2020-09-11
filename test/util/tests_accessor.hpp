@@ -12,11 +12,9 @@ class TestsAccessor : public msw::data::Accessor<T> {
   std::unique_ptr<T> initial_load_function() override;
   void persist(T* item) override;
 
-public:
-  const DataForTests& inst_data() const {
-    return inst_data_;
-  }
+ public:
+  const DataForTests& inst_data() const { return inst_data_; }
 
   TestsAccessor();
 };
-} // namespace msw::data
+}  // namespace msw::data

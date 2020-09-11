@@ -2,7 +2,6 @@
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 
-#include <src/win/windows_headers.hpp>
 #include <string>
 
 namespace google {

@@ -1,11 +1,14 @@
 #include "listener.hpp"
 
 #include <spdlog/spdlog.h>
-#include "Res/resource.hpp"
-#include "src/misc/utilities.hpp"
-#include "src/model/app_config.hpp"
-#include "src/win/encoding.hpp"
-#include "src/win/winapi_exceptions.hpp"
+
+#include <Res/resource.hpp>
+#include <src/data/pointers_to_globals.hpp>
+#include <src/misc/utilities.hpp>
+#include <src/model/app_config.hpp>
+#include <src/win/encoding.hpp>
+#include <src/win/winapi_exceptions.hpp>
+
 #include "tray.hpp"
 
 VOID CALLBACK msw::tray::Listener::my_wait_or_timer_cb(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWaitFired) {
@@ -16,7 +19,8 @@ VOID CALLBACK msw::tray::Listener::my_wait_or_timer_cb(_In_ PVOID lpParameter, _
 }
 
 msw::tray::Listener::Listener(Tray* tray) : tray_(tray) {
-  const auto discardable = msw::helpers::Utilities::get_parent_folder_and_filename(tray->config().file_to_listen());
+  const auto discardable =
+      msw::helpers::Utilities::get_parent_folder_and_filename(msw::pg::app_config->file_to_listen());
   std::tie(folder_, file_) = std::make_pair(encoding::utf8_to_utf16(discardable.first.c_str()),
                                             encoding::utf8_to_utf16(discardable.second.c_str()));
   SPDLOG_TRACE("Listener will setup: {}\\;\\{}", discardable.first, discardable.second);
