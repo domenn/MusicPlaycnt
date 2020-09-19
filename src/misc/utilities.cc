@@ -110,7 +110,7 @@ void msw::helpers::Utilities::start_non_executable_file(const std::string& path)
 }
 
 std::string msw::helpers::Utilities::get_thread_description() {
-#ifdef _DLL
+#if defined(_DLL) && defined(_MSC_VER)
   wchar_t* data;
   std::string return_val{};
   HRESULT hr = GetThreadDescription(GetCurrentThread(), &data);

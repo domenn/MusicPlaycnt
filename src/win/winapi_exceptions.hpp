@@ -1,6 +1,5 @@
 #pragma once
 #include <external/StackWalker.h>
-
 #include <ostream>
 #include <src/misc/custom_include_spdlog.hpp>
 #include <sstream>
@@ -98,9 +97,9 @@ class ApplicationError : public std::runtime_error {
 #endif
 };
 
-class ApplicationSendMessage : public ApplicationError {
+class UserError : public ApplicationError {
  public:
-  ApplicationSendMessage(const char* message) : ApplicationError(message) {}
+  UserError(const char* message) : ApplicationError(message) {}
 };
 
 class InformationalApplicationError : public ApplicationError {
@@ -148,6 +147,12 @@ class ErrorCode : public InformationalApplicationError {
   bool is_enoent() const;
   bool is_already_exists() const;
   int code() const { return error_code_; }
+};
+
+class InformationalUserError : public InformationalApplicationError {
+ public:
+  InformationalUserError(TraceEntry trace_entry, const char* user_message = "")
+      : InformationalApplicationError(user_message, std::move(trace_entry)) {}
 };
 
 class WinApiError : public ErrorCode {

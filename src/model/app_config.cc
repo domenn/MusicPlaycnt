@@ -14,7 +14,7 @@ void msw::model::AppConfig::set_file_to_listen(const std::string& pathFileToList
 
 const std::string& msw::model::AppConfig::file_to_listen() const { return proto_app_config_.filetolisten(); }
 
-const int32_t msw::model::AppConfig::playcount_threshold_seconds() const {
+int32_t msw::model::AppConfig::playcount_threshold_seconds() const {
   return proto_app_config_.playcountthresholdseconds();
 }
 

@@ -1,11 +1,11 @@
 #ifdef _WIN32
 
+#include <src/win/windows_headers.hpp>
+
 #include "windows_error_format.hpp"
 
-#include <strsafe.h>
-
 #include <src/win/encoding.hpp>
-#include <src/win/windows_headers.hpp>
+#include <strsafe.h>
 
 class DeleteOnDestruct {
   LPVOID ptr_;

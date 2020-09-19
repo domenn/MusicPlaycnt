@@ -121,6 +121,7 @@ TEST(Cli, emptyAlbum) {
   ASSERT_EQ("", a_song.album());
 }
 
+#ifdef _MSC_VER
 TEST(Misc, stackTraceOstreamDoesntCrash) {
   const msw::exceptions::AppStackWalker app_stack_walker;
   std::ostringstream one;
@@ -151,6 +152,7 @@ TEST(Misc, stackTraceOstreamDifferentSizes) {
   app_stack_walker.set_custom_value({"final_one"});
   SPDLOG_INFO("Attempt4 .. final one: {}", app_stack_walker);
 }
+#endif
 
 TEST(tbd1,not_eq) {
   msw::StringProvider sp;
@@ -159,7 +161,8 @@ TEST(tbd1,not_eq) {
   auto sm = song1.similarity(song2);
 
   SPDLOG_INFO("{}", msw::model::SongPartDifferences::SongSimilarityOstreamHelper{&sm, &song1, &song2});
-  // todo some assert???
+  ASSERT_EQ(0, sm.path);
+  ASSERT_EQ(3, sm.equal_fields);
 }
 
 // class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {

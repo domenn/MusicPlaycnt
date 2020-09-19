@@ -15,7 +15,7 @@ void msw::data::ProductionAccessor<T>::persist(T* item) {
 
 template <typename T>
 msw::data::ProductionAccessor<T>::ProductionAccessor(const std::string& path_for_disk_storage)
-    : Accessor(), path_for_disk_storage_(path_for_disk_storage) {}
+    : path_for_disk_storage_(path_for_disk_storage) {}
 
 // template class msw::data::ProductionAccessor<msw::model::SongList>;
 template class msw::data::ProductionAccessor<msw::model::SongWithMetadata>;

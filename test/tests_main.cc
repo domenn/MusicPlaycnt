@@ -3,6 +3,7 @@
 
 #include "tests_main.hpp"
 
+#include "flow_tests.hpp"
 #include "persistence_test.hpp"
 #include <sago/platform_folders.h>
 #include <src/data/accessor.hpp>
@@ -47,6 +48,10 @@ std::tuple<std::string, std::string, std::string, std::string> msw::StringProvid
                          get_str(std::string(prefix)),
                          get_str(std::string(prefix)),
                          get_str(std::move(prefix)));
+}
+
+std::string msw::p_mk(std::string&& token) {
+  return (std::filesystem::path(msw::pg::app_config->library_path()) / token).generic_string();
 }
 
 void msw::musicstuffs::FooNpLogParser::init_lines_reader() {

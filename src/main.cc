@@ -1,11 +1,3 @@
-#include <sago/platform_folders.h>
-
-#include <exe_only_src/production_accessor.hpp>
-#include <external/cxxopt.hpp>
-#include <fstream>
-#include <src/data/pointers_to_globals.hpp>
-#include <src/misc/consts.hpp>
-#include <src/model/song.hpp>
 #include <src/win/windows_headers.hpp>
 
 #include "misc/spd_logging.hpp"
@@ -14,6 +6,12 @@
 #include "musicstuff/foo_np_log_parser.hpp"
 #include "tray/tray.hpp"
 #include "win/winapi_exceptions.hpp"
+#include <exe_only_src/production_accessor.hpp>
+#include <fstream>
+#include <processthreadsapi.h>
+#include <sago/platform_folders.h>
+#include <src/data/pointers_to_globals.hpp>
+#include <src/misc/consts.hpp>
 
 msw::model::AppConfig get_or_create_config() {
   try {
@@ -43,7 +41,7 @@ int main(int argc, char** argv) {
                          .file_name("NewMusicTrackerCounter.log")
                          .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
                          .log_to_file(true));
-#ifdef _DLL
+#if defined(_DLL) && defined(_MSC_VER)
   SetThreadDescription(GetCurrentThread(), L"MainThread");
 #endif
 #ifdef _WIN32

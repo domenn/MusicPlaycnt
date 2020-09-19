@@ -30,8 +30,8 @@
 #define NTDDI_VERSION 0x0A000000
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0A00  // Windows 10
-#else
-#pragma message "WINNT already defined to " DIAG__HIDDEN_PRINT_XSTR(_WIN32_WINNT)
+//#else
+//#pragma message "WINNT already defined to " DIAG__HIDDEN_PRINT_XSTR(_WIN32_WINNT)
 #endif
 #define WINVER 0x0A00
 #define _WIN32_IE 0x0A00

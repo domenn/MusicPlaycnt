@@ -1,6 +1,7 @@
 #include "do_things.hpp"
 
 #include <filesystem>
+#include <fmt/ostream.h>
 #include <src/data/accessor.hpp>
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/utilities.hpp>
@@ -17,7 +18,7 @@ class Handler {
   SongWithMetadata new_song_;
   ActionType new_song_action_type_{new_song_.action_type()};
 
-  void potentially_update_current();
+  void potentially_update_playcnt_for_current();
   void update_timestamp_for_current();
   bool equals_or_throw();
 
@@ -34,7 +35,7 @@ Handler::Handler(SongWithMetadata&& new_song) : new_song_(std::move(new_song)) {
                        .lexically_normal()
                        .string());
   if (tmp_path.empty()) {
-    throw exceptions::ApplicationSendMessage(
+    throw exceptions::UserError(
         "Path is empty. Make sure that the config is correct.\n(LibraryPath - configure the root of your music)");
   }
 #ifdef _WIN32
@@ -43,12 +44,18 @@ Handler::Handler(SongWithMetadata&& new_song) : new_song_(std::move(new_song)) {
   new_song_.get_song().set_path(std::move(tmp_path));
 }
 
-void Handler::potentially_update_current() {
+void Handler::potentially_update_playcnt_for_current() {
+  assert(new_song_.action_type() == ActionType::PLAY);
   const auto current_song_reader = pg::handled_song->read();
-  // step 1: playing time OK?
-  const auto total_playback_seconds =
-      utiltime::primitive_convs::ms_to_s(new_song_.action_timestamp() - current_song_reader->action_timestamp()) -
-      current_song_reader->playing_seconds();
+  if (current_song_reader->get_song() == new_song_.get_song()) {
+    SPDLOG_ERROR("Strange situation. Songs (new and current) - ({}) are same", new_song_.get_song());
+    return;
+  }
+  const auto actual_pt = current_song_reader->recalculate_playing_time(new_song_.action_timestamp());
+  // TODO: I need to have stored the list of stuff. And I find the thing on list and modify it.
+  if (actual_pt > pg::app_config->playcount_threshold_ms()) {
+    pg::handled_song->write([](SongWithMetadata* mutated) { mutated->get_song().increment_playcnt(); });
+  }
   // step 2: song same? If yes, preserve playing_seconds
   //
   // if (pg::app_config->playcount_threshold_seconds() >= total_playback_seconds)
@@ -56,12 +63,18 @@ void Handler::potentially_update_current() {
 }
 
 void Handler::update_timestamp_for_current() {
-  // is it same? .. TODO
-  pg::handled_song->write([this](auto* thingy) {
-    const auto current_value = thingy->playing_seconds();
-    const auto new_value =
-        utiltime::primitive_convs::ms_to_s(new_song_.action_timestamp() - thingy->action_timestamp()) + current_value;
-    thingy->set_playing_seconds(new_value);
+  assert(new_song_.action_type() == ActionType::PAUSE || new_song_.action_type() == ActionType::STOP);
+  pg::handled_song->write([this](SongWithMetadata* thingy) {
+    if (new_song_.get_song() != thingy->get_song()) {
+      throw msw::exceptions::InformationalApplicationError(
+          fmt::format("Pausing. But current song\n{}\n  is not the one we have cached\n{}\n   Not supported. Please "
+                      "add support.",
+                      thingy->get_song(),
+                      new_song_.get_song())
+              .c_str(),
+          MSW_TRACE_ENTRY_CREATE);
+    }
+    thingy->on_stop_or_pause(new_song_action_type_, new_song_.action_timestamp());
   });
 }
 
@@ -78,13 +91,14 @@ bool Handler::equals_or_throw() {
 void Handler::update_data_for_currently_stored_song() {
   switch (new_song_action_type_) {
     case model::ActionType::PLAY:
-      potentially_update_current();
+      potentially_update_playcnt_for_current();
       return;
     case model::ActionType::NONE:
       return;
     case ActionType::STOP:
     case ActionType::PAUSE:
       update_timestamp_for_current();
+      return;
     default:
       return;
   }

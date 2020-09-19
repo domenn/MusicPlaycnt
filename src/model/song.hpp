@@ -46,10 +46,7 @@ struct SongPartDifferences {
       : artist(artist), album(album), title(title), path(path), equal_fields(artist + album + title + path) {}
 
   std::string write_disequality(msw::model::Song* left = nullptr, msw::model::Song* right = nullptr);
-
   friend std::ostream& operator<<(std::ostream& os, const SongPartDifferences& similarity);
-  // friend std::ostream& operator<<(std::ostream& os, const SongSimilarityOstreamHelper& obj);
-
   struct SongSimilarityOstreamHelper {
     SongPartDifferences* ss{};
     msw::model::Song* left{nullptr};
@@ -58,6 +55,9 @@ struct SongPartDifferences {
     friend std::ostream& operator<<(std::ostream& os, const SongSimilarityOstreamHelper& obj);
   };
 };
+
+std::ostream& operator<<(std::ostream& os, const SongPartDifferences::SongSimilarityOstreamHelper& obj);
+std::ostream& operator<<(std::ostream& os, const SongPartDifferences& similarity);
 
 class Song : public Serializable {
   // This "model" can be owning or non-owning. Hence optional. Serializable::underlying_object always has pointer to the
@@ -95,6 +95,12 @@ class Song : public Serializable {
   operator msw_proto_song::Song*() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Song& obj);
+  void increment_playcnt();
 };
+
+bool operator==(const Song& lhs, const Song& rhs);
+bool operator!=(const Song& lhs, const Song& rhs);
+std::ostream& operator<<(std::ostream& os, const Song& obj);
+
 }  // namespace model
 }  // namespace msw

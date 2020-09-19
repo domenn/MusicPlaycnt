@@ -112,7 +112,7 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         try {
           SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
           do_things::new_song_happened(static_cast<model::SongWithMetadata>(musicstuffs::FooNpLogParser()));
-        } catch (exceptions::ApplicationSendMessage const& any) {
+        } catch (exceptions::UserError const& any) {
           SPDLOG_WARN("{} - {}", typeid(any).name(), any.what());
           MessageBoxW(hwnd, any.what_w().c_str(), L"Logic error", MB_OK | MB_ICONWARNING);
         }

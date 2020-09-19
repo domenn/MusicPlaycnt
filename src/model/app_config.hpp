@@ -1,9 +1,9 @@
 #pragma once
 #include <src/win/windows_headers.hpp>
 
+#include "serializable.hpp"
 #include <src/protobufs/app_config.pb.h>
 #include <string>
-#include "serializable.hpp"
 
 namespace msw::model {
 
@@ -14,7 +14,8 @@ class AppConfig : public Serializable {
   class DelimiterIterable {
     const AppConfig* app_config_;
     int idx_{};
-  public:
+
+   public:
     DelimiterIterable(const AppConfig* app_config) : app_config_(app_config) {}
 
     DelimiterIterable(const AppConfig* app_config, int idx) : app_config_(app_config), idx_(idx) {}
@@ -64,7 +65,8 @@ class AppConfig : public Serializable {
   void set_playcount_threshold_seconds(int32_t seconds);
   void set_song_print_format(const std::string& fmt);
   const std::string& file_to_listen() const;
-  const int32_t playcount_threshold_seconds() const;
+  int32_t playcount_threshold_seconds() const;
+  int32_t playcount_threshold_ms() const { return playcount_threshold_seconds() * 1000; }
   const std::string& library_path() const;
   const std::string& stored_state_path() const;
   const std::string& stored_data() const;

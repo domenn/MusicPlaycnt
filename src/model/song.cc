@@ -83,7 +83,8 @@ const std::string& msw::model::Song::path() const {
 }
 
 msw::model::SongPartDifferences msw::model::Song::similarity(const Song& rhs) const {
-  return SongPartDifferences{artist() == rhs.artist(), album() == rhs.album(), title() == rhs.title(), path() == rhs.path()};
+  return SongPartDifferences{
+      artist() == rhs.artist(), album() == rhs.album(), title() == rhs.title(), path() == rhs.path()};
 }
 
 const std::string& msw::model::Song::album() const {
@@ -96,6 +97,11 @@ msw::model::Song::operator msw_proto_song::Song*() const {
 
 msw::model::Song msw::model::Song::deserialize(const std::string& contents) {
   return from_string<msw_proto_song::Song>(contents);
+}
+
+void msw::model::Song::increment_playcnt() {
+  auto* casted = reinterpret_cast<msw_proto_song::Song*>(underlying_object_);
+  casted->set_playcnt(casted->playcnt() + 1);
 }
 
 bool msw::model::operator==(const Song& lhs, const Song& rhs) {
@@ -130,7 +136,8 @@ std::ostream& msw::model::operator<<(std::ostream& os, const Song& obj) {
                            fmt::arg(consts::KW_TOKEN_T, obj.title()));
 }
 
-std::ostream& msw::model::operator<<(std::ostream& os, const msw::model::SongPartDifferences::SongSimilarityOstreamHelper& obj) {
+std::ostream& msw::model::operator<<(std::ostream& os,
+                                     const msw::model::SongPartDifferences::SongSimilarityOstreamHelper& obj) {
   if (obj.left && obj.right) {
     os << "Songs\n" << *obj.left << "\nAND\n" << *obj.right << "\ndiffer IN:";
   } else if (obj.left || obj.right) {
@@ -140,16 +147,16 @@ std::ostream& msw::model::operator<<(std::ostream& os, const msw::model::SongPar
   return os;
 }
 std::ostream& msw::model::operator<<(std::ostream& os, const msw::model::SongPartDifferences& similarity) {
-  if(!similarity.artist){
+  if (!similarity.artist) {
     os << " artist\n";
   }
-  if(!similarity.album){
+  if (!similarity.album) {
     os << " album\n";
   }
-  if(!similarity.title){
+  if (!similarity.title) {
     os << " title\n";
   }
-  if(!similarity.path){
+  if (!similarity.path) {
     os << " path\n";
   }
   return os;
