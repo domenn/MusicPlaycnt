@@ -69,6 +69,17 @@ class Song : public Serializable {
   Song(msw_proto_song::Song&& song);
   Song(msw_proto_song::Song* song);
   Song(std::string album, std::string artist, std::string title, std::string fn);
+  Song(std::string album, std::string artist, std::string title, std::string fn,
+      int32_t plycnt);
+
+
+  Song(const Song& other) = delete;
+
+  Song(Song&& other) noexcept;
+
+  Song& operator=(const Song& other) = delete;
+
+  Song& operator=(Song&& other) noexcept;
 
   static Song deserialize(const std::string& contents);
   /**
@@ -86,20 +97,22 @@ class Song : public Serializable {
   const std::string& artist() const;
   const std::string& title() const;
   const std::string& path() const;
+  int32_t playcount() const;
   SongPartDifferences similarity(const Song& rhs) const;
 
-  friend bool operator==(const Song& lhs, const Song& rhs);
+  bool operator==(const Song& rhs) const;
 
-  friend bool operator!=(const Song& lhs, const Song& rhs);
+  bool operator!=(const Song& rhs) const;
 
   operator msw_proto_song::Song*() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Song& obj);
   void increment_playcnt();
+
+  Song make_copy() const;
+  // void copy_into(msw_proto_song::Song* changing) const;
 };
 
-bool operator==(const Song& lhs, const Song& rhs);
-bool operator!=(const Song& lhs, const Song& rhs);
 std::ostream& operator<<(std::ostream& os, const Song& obj);
 
 }  // namespace model

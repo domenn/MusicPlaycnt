@@ -2,6 +2,7 @@
 
 #include <fmt/ostream.h>
 #include <gtest/gtest.h>
+#include <src/data/accessor.hpp>
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/spd_logging.hpp>
 #include <src/misc/utilities.hpp>
@@ -163,6 +164,28 @@ TEST(tbd1,not_eq) {
   SPDLOG_INFO("{}", msw::model::SongPartDifferences::SongSimilarityOstreamHelper{&sm, &song1, &song2});
   ASSERT_EQ(0, sm.path);
   ASSERT_EQ(3, sm.equal_fields);
+}
+
+TEST(SongModel, diff_or_same) {
+  Song song1_1 {"a", "b", "c", "d", 1};
+  Song song1 {"a", "b", "c", "d", 1};
+  Song song2 {"a", "b", "c", "d", 2};
+  Song song3 {"b", "b", "c", "d", 2};
+
+  ASSERT_EQ(song1, song1_1);
+  ASSERT_EQ(song1, song2);
+}
+
+TEST(SongModel, copy) {
+  const Song song1 {"a", "b", "c", "d", 1};
+
+  msw::pg::song_list->write([&song1](SongList* mutated)
+  {
+    mutated->add_by_copying(song1.make_copy());
+  });
+
+  auto inserted = msw::pg::song_list->read()->operator[](0);
+  ASSERT_EQ(inserted, song1);
 }
 
 // class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {

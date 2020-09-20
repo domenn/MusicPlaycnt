@@ -112,9 +112,10 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         try {
           SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
           do_things::new_song_happened(static_cast<model::SongWithMetadata>(musicstuffs::FooNpLogParser()));
-        } catch (exceptions::UserError const& any) {
-          SPDLOG_WARN("{} - {}", typeid(any).name(), any.what());
-          MessageBoxW(hwnd, any.what_w().c_str(), L"Logic error", MB_OK | MB_ICONWARNING);
+        } catch (exceptions::NonCriticalError const& any) {
+          auto std_any = reinterpret_cast<const msw::exceptions::ApplicationError&> (any);
+          SPDLOG_WARN("{} - {}", typeid(std_any).name(), std_any.what());
+          MessageBoxW(hwnd, std_any.what_w().c_str(), L"Logic error", MB_OK | MB_ICONWARNING);
         }
         get_tray_from_window(hwnd)->listener_.listen();
         return 0;

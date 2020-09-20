@@ -97,7 +97,11 @@ class ApplicationError : public std::runtime_error {
 #endif
 };
 
-class UserError : public ApplicationError {
+class NonCriticalError {
+  
+};
+
+class UserError : public ApplicationError, NonCriticalError {
  public:
   UserError(const char* message) : ApplicationError(message) {}
 };
@@ -132,7 +136,7 @@ class InformationalApplicationError : public ApplicationError {
   }
 };
 
-class ErrorCode : public InformationalApplicationError {
+class ErrorCode : public InformationalApplicationError, NonCriticalError {
  protected:
   const int error_code_;
   std::string getlasterror_function_;

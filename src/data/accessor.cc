@@ -25,7 +25,7 @@ void msw::data::Accessor<T>::replace(T* replacement_item) {
   if (!item_) {
     item_ = std::make_unique<T>(std::move(*replacement_item));
   } else {
-    *item_ = std::move(*replacement_item);
+    item_->operator=(std::move(*replacement_item));
   }
   persist(item_.get());
 }

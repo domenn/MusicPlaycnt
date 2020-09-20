@@ -1,5 +1,6 @@
 #include "serializable.hpp"
 
+#include "song_list.hpp"
 #include "song_with_metadata.hpp"
 #include "src/misc/open_wrap.hpp"
 #include "src/protobufs/songs.pb.h"
@@ -45,7 +46,12 @@ google::protobuf::io::FileOutputStream msw::Serializable::open_file_for_writing(
 google::protobuf::io::FileInputStream msw::Serializable::open_file_for_reading(const std::string& path) {
   auto [existing_file, my_errno] = cp_open_lw(path.c_str(), O_RDONLY);
   if (existing_file == -1) {
-    throw msw::exceptions::ErrorCode(my_errno, M_PROTOBUF_OPEN_FILE_IMPL, {__LINE__, __FUNCTION__, __FILE__});
+    #ifdef _WIN32
+    using thrown_e = msw::exceptions::WinApiError;
+#else
+    using thrown_e = msw::exceptions::ErrorCode;
+#endif
+    throw thrown_e(my_errno, M_PROTOBUF_OPEN_FILE_IMPL, {__LINE__, __FUNCTION__, __FILE__});
   }
   return google::protobuf::io::FileInputStream(existing_file);
 }
@@ -103,8 +109,11 @@ void msw::Serializable::deserialize_string_impl(const std::string& contents, goo
   google::protobuf::TextFormat::Parse(&proto_iss, msg);
 }
 
+// clang-format off
 template msw::model::AppConfig msw::Serializable::from_file<msw::model::AppConfig>(std::string const& in_path);
 template msw::model::SongWithMetadata msw::Serializable::from_file<msw::model::SongWithMetadata>(std::string const& in_path);
 template std::string msw::Serializable::serialize<msw_proto_song::Song>(const msw_proto_song::Song&);
-template std::string msw::Serializable::serialize<msw_proto_song::SongWithMetadata>(
-    const msw_proto_song::SongWithMetadata&);
+template std::string msw::Serializable::serialize<msw_proto_song::SongWithMetadata>(const msw_proto_song::SongWithMetadata&);
+template msw::model::SongList msw::Serializable::from_file<msw::model::SongList>(std::string const& in_path);
+template std::string msw::Serializable::serialize<msw_proto_song::Songs>(const msw_proto_song::Songs&);
+// clang-format on

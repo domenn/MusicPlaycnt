@@ -23,9 +23,9 @@ int main(int argc, char** argv) {
                          .level(spdlog::level::debug)
                          .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA));
 
-  // msw::data::Accessor<msw::model::SongList> inst_song_list;
+  msw::data::TestsAccessor<msw::model::SongList> inst_song_list;
   msw::data::TestsAccessor<msw::model::SongWithMetadata> inst_handled_song;
-  // msw::pg::song_list = &inst_song_list;
+  msw::pg::song_list = &inst_song_list;
   msw::pg::handled_song = &inst_handled_song;
 
   msw::model::AppConfig tests_config;
@@ -58,3 +58,5 @@ void msw::musicstuffs::FooNpLogParser::init_lines_reader() {
   const auto* downcasted_me = reinterpret_cast<MockFooNpLogParser*>(this);
   reverse_line_reader_.emplace(std::make_unique<std::istringstream>(downcasted_me->line_to_parse_));
 }
+
+// --gtest_catch_exceptions=0 --gtest_filter=SongModel.diff*

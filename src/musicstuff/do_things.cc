@@ -4,9 +4,12 @@
 #include <fmt/ostream.h>
 #include <src/data/accessor.hpp>
 #include <src/data/pointers_to_globals.hpp>
+#include <src/misc/consts.hpp>
+#include <src/misc/spd_logging.hpp>
 #include <src/misc/utilities.hpp>
 #include <src/misc/utiltime.hpp>
 #include <src/model/app_config.hpp>
+#include <src/model/song_list.hpp>
 #include <src/model/song_with_metadata.hpp>
 #include <src/win/winapi_exceptions.hpp>
 
@@ -48,18 +51,28 @@ void Handler::potentially_update_playcnt_for_current() {
   assert(new_song_.action_type() == ActionType::PLAY);
   const auto current_song_reader = pg::handled_song->read();
   if (current_song_reader->get_song() == new_song_.get_song()) {
+    // TODO: Same song is supported. When I play ... It may've been paused before. If that's the case, reset action time and go on ...
     SPDLOG_ERROR("Strange situation. Songs (new and current) - ({}) are same", new_song_.get_song());
     return;
   }
   const auto actual_pt = current_song_reader->recalculate_playing_time(new_song_.action_timestamp());
-  // TODO: I need to have stored the list of stuff. And I find the thing on list and modify it.
-  if (actual_pt > pg::app_config->playcount_threshold_ms()) {
-    pg::handled_song->write([](SongWithMetadata* mutated) { mutated->get_song().increment_playcnt(); });
+  if (actual_pt > static_cast<uint64_t>(pg::app_config->playcount_threshold_ms())) {
+    pg::song_list->write([&current_song_reader](msw::model::SongList* sl) {
+      auto opt_found = sl->find_matching_song(current_song_reader->get_song());
+      if (opt_found != std::nullopt) {
+        SPDLOG_LOGGER_INFO(L_MSW_EVTS,
+                           "Incrementing existing song - {}\n (previous playcount: {})",
+                           *opt_found,
+                           opt_found->playcount());
+        opt_found->increment_playcnt();
+      } else {
+        assert(current_song_reader->get_song().playcount() == 0);
+        SPDLOG_LOGGER_INFO(L_MSW_EVTS, "NEW SONG - {}\n", current_song_reader->get_song());
+        current_song_reader->get_song().increment_playcnt();
+        sl->add_by_copying(current_song_reader->get_song());
+      }
+    });
   }
-  // step 2: song same? If yes, preserve playing_seconds
-  //
-  // if (pg::app_config->playcount_threshold_seconds() >= total_playback_seconds)
-  //  ;
 }
 
 void Handler::update_timestamp_for_current() {
@@ -106,8 +119,10 @@ void Handler::update_data_for_currently_stored_song() {
 }
 
 void Handler::advance() {
-  // todo .. songs differ? did we change?
-  return;
+  if (new_song_.get_song() == pg::handled_song->read()->get_song()) {
+    SPDLOG_LOGGER_INFO(L_MSW_EVTS, "Advance called, but song {} is same. Doing nothing.", new_song_.get_song());
+    return;
+  }
   if (new_song_action_type_ != ActionType::NONE) {
     pg::handled_song->replace(&new_song_);
   }

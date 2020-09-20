@@ -2,6 +2,7 @@
 
 #include <src/data/pointers_to_globals.hpp>
 #include <src/model/song_with_metadata.hpp>
+#include <src/model/song_list.hpp>
 
 namespace msw::pg {
 data::DataForTests* data_for_tests;
@@ -23,3 +24,4 @@ msw::data::TestsAccessor<T>::TestsAccessor() : Accessor<T>() {
 }
 
 template class msw::data::TestsAccessor<msw::model::SongWithMetadata>;
+template class msw::data::TestsAccessor<msw::model::SongList>;

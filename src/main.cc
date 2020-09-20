@@ -54,6 +54,9 @@ int main(int argc, char** argv) {
   msw::data::ProductionAccessor<msw::model::SongWithMetadata> inst_handled_song(cfg.stored_state_path());
   msw::pg::handled_song = &inst_handled_song;
 
+  msw::data::ProductionAccessor<msw::model::SongList> inst_songlist(cfg.stored_data());
+  msw::pg::song_list = &inst_songlist;
+
   if (cmd_parse.is_listen()) {
     msw::tray::Tray main_tray(hInstance);
 

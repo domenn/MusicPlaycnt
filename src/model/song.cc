@@ -54,6 +54,20 @@ msw::model::Song::Song(std::string album, std::string artist, std::string title,
   set_path(std::move(fn));
 }
 
+msw::model::Song::Song(std::string album, std::string artist, std::string title, std::string fn, int32_t plycnt)
+    : msw::model::Song(album, artist, title, fn) {
+  reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->set_playcnt(plycnt);
+}
+
+msw::model::Song::Song(Song&& other) noexcept
+    : proto_song_containing_optional_(std::move(other.proto_song_containing_optional_)) {
+  if(proto_song_containing_optional_.has_value()) {
+    underlying_object_ = &proto_song_containing_optional_.value();
+  } else {
+    underlying_object_ = other.underlying_object_;
+  }
+}
+
 void msw::model::Song::set_artist(std::string&& artist) {
   reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->set_artist(std::move(artist));
 }
@@ -82,10 +96,25 @@ const std::string& msw::model::Song::path() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->path();
 }
 
+int32_t msw::model::Song::playcount() const {
+  return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->playcnt();
+}
+
 msw::model::SongPartDifferences msw::model::Song::similarity(const Song& rhs) const {
   return SongPartDifferences{
       artist() == rhs.artist(), album() == rhs.album(), title() == rhs.title(), path() == rhs.path()};
 }
+
+bool msw::model::Song::operator==(const Song& rhs) const {
+  google::protobuf::util::MessageDifferencer dif;
+  dif.IgnoreField(msw_proto_song::Song::GetDescriptor()->FindFieldByNumber(msw_proto_song::Song::kPlaycntFieldNumber));
+  return dif.Compare(*underlying_object_, *rhs.underlying_object_);
+
+  // const auto& wtf = *reinterpret_cast<msw_proto_song::Song*>(underlying_object_);
+  // return wtf.artist() == rhs.artist() && wtf.album() == rhs.album() && wtf.path() == rhs.path() &&
+  //       wtf.title() == rhs.title();
+}
+bool msw::model::Song::operator!=(const Song& rhs) const { return !operator==(rhs); }
 
 const std::string& msw::model::Song::album() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->album();
@@ -93,6 +122,16 @@ const std::string& msw::model::Song::album() const {
 
 msw::model::Song::operator msw_proto_song::Song*() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_);
+}
+
+msw::model::Song& msw::model::Song::operator=(Song&& other) noexcept {
+  if (this == &other) return *this;
+  // if(other.proto_song_containing_optional_ != std::nullopt) {
+  //  proto_song_containing_optional_ = std::move(other.proto_song_containing_optional_);
+  //}else {
+  auto other_song = *reinterpret_cast<msw_proto_song::Song*>(other.underlying_object_);
+  reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->operator=(std::move(other_song));
+  return *this;
 }
 
 msw::model::Song msw::model::Song::deserialize(const std::string& contents) {
@@ -104,11 +143,17 @@ void msw::model::Song::increment_playcnt() {
   casted->set_playcnt(casted->playcnt() + 1);
 }
 
-bool msw::model::operator==(const Song& lhs, const Song& rhs) {
-  return google::protobuf::util::MessageDifferencer::Equals(*lhs.underlying_object_, *rhs.underlying_object_);
-}
+msw::model::Song msw::model::Song::make_copy() const { return Song(album(), artist(), title(), path(), playcount()); }
 
-bool msw::model::operator!=(const Song& lhs, const Song& rhs) { return !(lhs == rhs); }
+// void msw::model::Song::copy_into(msw_proto_song::Song* changing) const {
+//
+//}
+
+// bool msw::model::operator==(const Song& lhs, const Song& rhs) {
+//  return google::protobuf::util::MessageDifferencer::Equals(*lhs.underlying_object_, *rhs.underlying_object_);
+//}
+//
+// bool msw::model::operator!=(const Song& lhs, const Song& rhs) { return !(lhs == rhs); }
 
 void replace_one(std::string& mutated, const char* const finding, size_t finding_size, const std::string& new_thing) {
   if (auto idx = mutated.find(finding, 0, finding_size); idx != std::string::npos) {

@@ -62,3 +62,6 @@ void spdlog_setup(SpdlogConfig &&cfg = {});
  */
 // spdlog::level::level_enum level_from_str(std::string level_str);
 }  // namespace spdl
+
+
+#define L_MSW_EVTS spdl::get("Events")
