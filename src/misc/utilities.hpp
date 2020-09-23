@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace msw::helpers {
-class ParseSongItems;
+struct ParseSongItems;
 
 class Utilities {
  public:
@@ -22,25 +22,54 @@ class Utilities {
 
   static std::string get_thread_description();
 
-  static std::string& ltrim(std::string& s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+  template <typename char_t>
+  static bool isspace_simple(char_t ch) {
+    return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\v' || ch == '\f' || ch == '\r';
+  }
+
+  // static std::string& ltrim(std::string& s) {
+  //  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+  //  return s;
+  //}
+
+  // static std::string& rtrim(std::string& s) {
+  //  s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
+  //  return s;
+  //}
+
+  // static std::string& trim(std::string& s) {
+  //  ltrim(s);
+  //  rtrim(s);
+  //  return s;
+  //}
+
+  // static std::string trim(std::string&& s) {
+  //  ltrim(s);
+  //  rtrim(s);
+  //  return std::move(s);
+  //}
+
+  static std::string& u8ltrim(std::string& s) {
+    s.erase(s.begin(),
+            std::find_if(s.begin(), s.end(), [](std::string::value_type ch) { return !isspace_simple(ch); }));
     return s;
   }
 
-  static std::string& rtrim(std::string& s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(), s.end());
+  static std::string& u8rtrim(std::string& s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](std::string::value_type ch) { return !isspace_simple(ch); }).base(),
+            s.end());
     return s;
   }
 
-  static std::string& trim(std::string& s) {
-    ltrim(s);
-    rtrim(s);
+  static std::string& u8trim(std::string& s) {
+    u8ltrim(s);
+    u8rtrim(s);
     return s;
   }
 
-  static std::string trim(std::string&& s) {
-    ltrim(s);
-    rtrim(s);
+  static std::string u8trim(std::string&& s) {
+    u8ltrim(s);
+    u8rtrim(s);
     return std::move(s);
   }
 
@@ -54,7 +83,9 @@ class Utilities {
    * \return true if `input` starts with `starting`.
    */
   template <typename char_type = std::string::value_type>
-  static bool starts_with(const std::basic_string<char_type>& input, const char_type* starting, size_t const match_size) {
+  static bool starts_with(const std::basic_string<char_type>& input,
+                          const char_type* starting,
+                          size_t const match_size) {
     return !input.compare(0, match_size, starting, match_size);
   }
 

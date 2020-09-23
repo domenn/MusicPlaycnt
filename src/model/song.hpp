@@ -8,6 +8,7 @@
 #include "serializable.hpp"
 #include <ostream>
 #include <src/misc/utilities.hpp>
+#include <src/misc/custom_include_spdlog.hpp>
 
 namespace msw {
 namespace helpers {
@@ -124,21 +125,14 @@ class Song : public Serializable {
   void increment_playcnt();
 
   Song make_copy() const;
-  // void copy_into(msw_proto_song::Song* changing) const;
 
- private:  // utils - put to end for readability.
-  auto internal_immutable_tags() const;
-  template <typename proto_tags_t>
-  static auto iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size);
-  bool iterator_of_tags_valid(
-      const google::protobuf::internal::RepeatedPtrIterator<const std::string>& repeated_ptr_iterator) const;
-  std::string tags_extract(const google::protobuf::internal::RepeatedPtrIterator<const std::string>& cs,
-                           size_t key_size) const;
-  void remove_tag_by_iterator_if_valid(
-      google::protobuf::internal::RepeatedPtrIterator<const std::string> temp_item) const;
-  void remove_key_valued(const char* keyword, size_t kw_size) const;
-  google::protobuf::internal::RepeatedPtrIterator<const std::string> iterator_of_tags_exact_match(
-      std::string_view tag_to_remove) const;
+ private:
+  static bool tags_kw_find_if_genre(const std::string& t);
+  //template <class proto_tags_t>
+  //static auto iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size);
+  template <class proto_tags_t>
+  static auto iterator_of_tag_exact_match(proto_tags_t tags, std::string_view tag_to_search);
+  void internal_remove_genre(const char* keyword, size_t kw_size) const;
 };
 
 std::ostream& operator<<(std::ostream& os, const Song& obj);
@@ -146,25 +140,44 @@ std::ostream& operator<<(std::ostream& os, const Song& obj);
 }  // namespace model
 }  // namespace msw
 
-inline bool msw::model::Song::iterator_of_tags_valid(
-    const google::protobuf::internal::RepeatedPtrIterator<const std::string>& repeated_ptr_iterator) const {
-  return repeated_ptr_iterator != reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->tags().end();
+template <bool is_begin, typename proto_tags_t>
+auto begin_or_end(proto_tags_t* tags) {
+  if constexpr (is_begin) {
+    return tags->begin();
+  } else {
+    return tags->end();
+  }
 }
 
-inline std::string msw::model::Song::tags_extract(
-    const google::protobuf::internal::RepeatedPtrIterator<const std::string>& cs, size_t key_size) const {
-  assert(iterator_of_tags_valid(cs));
-  return cs->substr(key_size);
+template <bool is_begin, typename proto_tags_t>
+auto begin_or_end(const proto_tags_t tags) {
+  if constexpr (is_begin) {
+    return std::begin(tags);
+  } else {
+    return std::end(tags);
+  }
 }
 
-inline auto msw::model::Song::internal_immutable_tags() const {
-  return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->tags();
+inline bool msw::model::Song::tags_kw_find_if_genre(const std::string& t) {
+  return msw::helpers::Utilities::starts_with(t, TAGENCODE_KW_GENRE, TAGENCODE_SZ_GENRE);
 }
+
+//template <typename proto_tags_t>
+//auto msw::model::Song::iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size) {
+//  const auto temp_item = std::find_if(begin_or_end<true>(tags), begin_or_end<false>(tags), [&](const std::string& t) {
+//    return msw::helpers::Utilities::starts_with(t, keyword, kw_size);
+//  });
+//  return temp_item;
+//}
 
 template <typename proto_tags_t>
-auto msw::model::Song::iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size) {
-  const auto temp_item = std::find_if(tags.begin(), tags.end(), [&](const std::string& t) {
-    return msw::helpers::Utilities::starts_with(t, keyword, kw_size);
-  });
+auto msw::model::Song::iterator_of_tag_exact_match(proto_tags_t tags, std::string_view tag_to_search) {
+  const auto temp_item = std::find(std::begin(tags), std::end(tags), tag_to_search);
   return temp_item;
 }
+
+// inline std::string msw::model::Song::tags_extract(
+//    const google::protobuf::internal::RepeatedPtrIterator<const std::string>& cs, size_t key_size) const {
+//  assert(iterator_of_tags_valid(cs));
+//  return cs->substr(key_size);
+//}

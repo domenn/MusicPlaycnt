@@ -38,7 +38,7 @@ msw::musicstuffs::FooNpLogParser::operator msw::model::SongWithMetadata() {
       init_lines_reader();
     }
     auto line = reverse_line_reader_->next();
-    helpers::Utilities::trim(line);
+    helpers::Utilities::u8trim(line);
     // A little unsafe. write_ptr iterates my variables, so they must not be reordered and things like that.
     std::string* write_ptr = &timestamp_;
     size_t idx_delim_end = 0;

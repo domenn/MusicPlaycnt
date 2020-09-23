@@ -13,6 +13,11 @@
 #include <src/model/app_config.hpp>
 #include <utility>
 
+#define INTERNAL_DECLARE_IMMUTABLE_TAGS \
+  const auto tags = reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->tags()
+#define INTERNAL_DECLARE_MUTABLE_TAGS \
+  auto* tags = reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->mutable_tags()
+
 msw::model::Song msw::model::Song::deserialize_from_file(const std::string& file_on_disk) {
   msw_proto_song::Song empty_proto_song;
   auto [handle, my_errno] = cp_open_lw(file_on_disk.c_str(), O_RDONLY);
@@ -100,9 +105,25 @@ void msw::model::Song::set_playcount(int32_t val) {
   reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->set_playcnt(val);
 }
 
+void msw::model::Song::internal_remove_genre(const char* keyword, size_t kw_size) const {
+  INTERNAL_DECLARE_MUTABLE_TAGS;
+  const auto iterator = std::find_if(tags->begin(), tags->end(), tags_kw_find_if_genre);
+  if (iterator != tags->end()) {
+    tags->erase(iterator);
+  }
+}
+// // TODO d tbd
+// void msw::model::Song::remove_tag_by_iterator_if_valid(
+//    const google::protobuf::internal::RepeatedPtrIterator<const std::string> temp_item) const {
+//  if (iterator_of_tags_valid(temp_item)) {
+//    SPDLOG_TRACE("It valid: {}", *temp_item);
+//    reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->mutable_tags()->erase(temp_item);
+//  }
+//}
+
 void msw::model::Song::set_genre(std::string&& genre) {
   SPDLOG_TRACE("Setting g {}", genre);
-  remove_key_valued(TAGENCODE_KW_GENRE, TAGENCODE_SZ_GENRE);
+  internal_remove_genre(TAGENCODE_KW_GENRE, TAGENCODE_SZ_GENRE);
   if (!genre.empty()) {
     add_tag(TAGENCODE_KW_GENRE + std::move(genre));
     // SPDLOG_TRACE("set; After is {}", this->genre());
@@ -110,11 +131,11 @@ void msw::model::Song::set_genre(std::string&& genre) {
 }
 
 std::string msw::model::Song::genre() const {
-  const auto tags = internal_immutable_tags();
-  const auto temp_item = iterator_of_tags_starts_with_fining(tags, TAGENCODE_KW_GENRE, TAGENCODE_SZ_GENRE);
-  if (iterator_of_tags_valid(temp_item)) {
+  INTERNAL_DECLARE_IMMUTABLE_TAGS;
+  const auto temp_item = std::find_if(std::begin(tags), std::end(tags), tags_kw_find_if_genre);
+  if (temp_item != std::end(tags)) {
     SPDLOG_TRACE("Iterator is valid and it is {}", *temp_item);
-    return tags_extract(temp_item, TAGENCODE_SZ_GENRE);
+    return temp_item->substr(TAGENCODE_SZ_GENRE);
   }
   return {};
 }
@@ -132,12 +153,14 @@ const std::string& msw::model::Song::path() const {
 }
 
 std::string msw::model::Song::delimited_tags(std::string_view delimiter) const {
-  auto tags = internal_immutable_tags();
+  INTERNAL_DECLARE_IMMUTABLE_TAGS;
   std::string returning{};
   for (const auto& tag : tags) {
     returning.append(tag).append(delimiter);
   }
-  returning.erase(returning.end() - delimiter.size());
+  if (!returning.empty()) {
+    returning.erase(returning.end() - delimiter.size(), returning.end());
+  }
   return returning;
 }
 
@@ -178,7 +201,11 @@ msw::model::Song& msw::model::Song::operator=(Song&& other) noexcept {
 }
 
 void msw::model::Song::remove_tag_strict(std::string_view tag_to_remove) {
-  remove_tag_by_iterator_if_valid(iterator_of_tags_exact_match(tag_to_remove));
+  INTERNAL_DECLARE_MUTABLE_TAGS;
+  const auto found_it = std::find(tags->begin(), tags->end(), tag_to_remove);
+  if (found_it != tags->end()) {
+    tags->erase(found_it);
+  }
 }
 
 msw::model::Song msw::model::Song::deserialize(const std::string& contents) {
@@ -261,21 +288,18 @@ std::ostream& msw::model::operator<<(std::ostream& os, const msw::model::SongPar
   return os;
 }
 
-void msw::model::Song::remove_tag_by_iterator_if_valid(
-    const google::protobuf::internal::RepeatedPtrIterator<const std::string> temp_item) const {
-  SPDLOG_TRACE("We're asked to remove tag by iterator ...");
-  if (iterator_of_tags_valid(temp_item)) {
-    SPDLOG_TRACE("It valid: {}", *temp_item);
-    reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->mutable_tags()->erase(temp_item);
-  }
-}
-
-void msw::model::Song::remove_key_valued(const char* keyword, size_t kw_size) const {
-  remove_tag_by_iterator_if_valid(iterator_of_tags_starts_with_fining(internal_immutable_tags(), keyword, kw_size));
-}
-
-google::protobuf::internal::RepeatedPtrIterator<const std::string> msw::model::Song::iterator_of_tags_exact_match(
-    std::string_view tag_to_remove) const {
-  const auto& tags = reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->tags();
-  return std::find(tags.begin(), tags.end(), tag_to_remove);
-}
+// // // TODO d tbd
+// void msw::model::Song::remove_tag_by_iterator_if_valid(
+//    const google::protobuf::internal::RepeatedPtrIterator<const std::string> temp_item) const {
+//  SPDLOG_TRACE("We're asked to remove tag by iterator ...");
+//  if (iterator_of_tags_valid(temp_item)) {
+//    SPDLOG_TRACE("It valid: {}", *temp_item);
+//    reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->mutable_tags()->erase(temp_item);
+//  }
+//}
+//
+// google::protobuf::internal::RepeatedPtrIterator<const std::string> msw::model::Song::iterator_of_tags_exact_match(
+//    std::string_view tag_to_remove) const {
+//  const auto& tags = reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->tags();
+//  return std::find(tags.begin(), tags.end(), tag_to_remove);
+//}
