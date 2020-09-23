@@ -1,14 +1,13 @@
 #include "tray.hpp"
 
-#include <src/misc/custom_include_spdlog.hpp>
-#include <src/win/winapi_exceptions.hpp>
-
 #include "../../Res/resource.hpp"
 #include "src/misc/consts.hpp"
 #include "src/misc/utilities.hpp"
 #include "src/model/app_config.hpp"
 #include "src/musicstuff/do_things.hpp"
 #include "src/musicstuff/foo_np_log_parser.hpp"
+#include <src/misc/custom_include_spdlog.hpp>
+#include <src/win/winapi_exceptions.hpp>
 
 using namespace msw;
 using namespace tray;
@@ -35,7 +34,7 @@ LRESULT on_version() {
 void Tray::on_exit() const { SendMessage(hwnd_, WM_CLOSE, 0, 0); }
 
 void Tray::handle_menu_choice(BOOL clicked) const {
-  SPDLOG_TRACE("Menu click: " + std::to_wstring(clicked));
+  SPDLOG_TRACE("Menu click: " + std::to_string(clicked));
   switch (clicked) {
     case APP_MENU_ENTRY_VERSION:
       on_version();
@@ -113,16 +112,20 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
           SPDLOG_INFO("Th: {}-{} HANDLING MSG.", GetCurrentThreadId(), helpers::Utilities::get_thread_description());
           do_things::new_song_happened(static_cast<model::SongWithMetadata>(musicstuffs::FooNpLogParser()));
         } catch (exceptions::NonCriticalError const& any) {
-          auto std_any = reinterpret_cast<const msw::exceptions::ApplicationError&> (any);
-          SPDLOG_WARN("{} - {}", typeid(std_any).name(), std_any.what());
-          MessageBoxW(hwnd, std_any.what_w().c_str(), L"Logic error", MB_OK | MB_ICONWARNING);
+          auto std_any = reinterpret_cast<const msw::exceptions::ApplicationError&>(any);
+          information_for_user(std_any,
+                               msw::consts::HEADING_LOGIC_ERROR,
+                               exceptions::InformationSeverity::WARNING,
+                               reinterpret_cast<void*>(hwnd));
         }
         get_tray_from_window(hwnd)->listener_.listen();
         return 0;
     }
   } catch (exceptions::ApplicationError const& any) {
-    SPDLOG_CRITICAL("{} - {}", typeid(any).name(), any.what());
-    MessageBoxW(hwnd, any.what_w().c_str(), L"Windows API exception critical error", MB_OK | MB_ICONERROR);
+    information_for_user(any,
+                         msw::consts::HEADING_CRITICAL_EXC,
+                         exceptions::InformationSeverity::CRITICAL,
+                         reinterpret_cast<void*>(hwnd));
     get_tray_from_window(hwnd)->on_exit();
     return 0;
   }

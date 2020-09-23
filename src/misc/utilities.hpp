@@ -38,13 +38,35 @@ class Utilities {
     return s;
   }
 
+  static std::string trim(std::string&& s) {
+    ltrim(s);
+    rtrim(s);
+    return std::move(s);
+  }
+
+  /**
+   * \brief "Optimized" version that does not call strlen.
+   *
+   * \tparam char_type char or wchar_t mostly.
+   * \param[in] input input to search within.
+   * \param[in] starting What to find.
+   * \param[in] match_size Number of characters in `to_find` to try to match.
+   * \return true if `input` starts with `starting`.
+   */
+  template <typename char_type = std::string::value_type>
+  static bool starts_with(const std::basic_string<char_type>& input, const char_type* starting, size_t const match_size) {
+    return !input.compare(0, match_size, starting, match_size);
+  }
+
   static std::string& erase_all_of(std::string& str, char character);
   static std::string& transform_replace_all(std::string& str, char from, const char* to, size_t to_size);
+
+  template <typename char_type>
+  static bool is_empty_or_spaces(std::basic_string<char_type> string);
+  static std::string shorten_path(const std::string& long_absolute_path);
 };
 
 class CmdParse {
-  static constexpr char BAD_VAL[] = " _-1BbB0q0Qa!qQQQ";
-
   class ArgcArgv {
    public:
     const int argc_;
@@ -83,5 +105,11 @@ class CmdParse {
 #endif
   [[nodiscard]] bool is_listen() const;
   [[nodiscard]] ParseSongItems song_data() const;
+  [[nodiscard]] std::string import_legacy_path() const;
 };
 }  // namespace msw::helpers
+
+template <typename char_type>
+bool msw::helpers::Utilities::is_empty_or_spaces(std::basic_string<char_type> string) {
+  return string.find_first_not_of(' ') == std::basic_string<char_type>::npos;
+}

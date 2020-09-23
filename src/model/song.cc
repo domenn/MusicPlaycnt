@@ -9,6 +9,7 @@
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/consts.hpp>
 #include <src/misc/custom_include_spdlog.hpp>
+#include <src/misc/utilities.hpp>
 #include <src/model/app_config.hpp>
 #include <utility>
 
@@ -54,14 +55,21 @@ msw::model::Song::Song(std::string album, std::string artist, std::string title,
   set_path(std::move(fn));
 }
 
-msw::model::Song::Song(std::string album, std::string artist, std::string title, std::string fn, int32_t plycnt)
+msw::model::Song::Song(std::string album,
+                       std::string artist,
+                       std::string title,
+                       std::string fn,
+                       int32_t plycnt,
+                       const google::protobuf::RepeatedPtrField<std::string>& tags)
     : msw::model::Song(album, artist, title, fn) {
-  reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->set_playcnt(plycnt);
+  auto* s = reinterpret_cast<msw_proto_song::Song*>(underlying_object_);
+  s->set_playcnt(plycnt);
+  s->mutable_tags()->CopyFrom(tags);
 }
 
 msw::model::Song::Song(Song&& other) noexcept
     : proto_song_containing_optional_(std::move(other.proto_song_containing_optional_)) {
-  if(proto_song_containing_optional_.has_value()) {
+  if (proto_song_containing_optional_.has_value()) {
     underlying_object_ = &proto_song_containing_optional_.value();
   } else {
     underlying_object_ = other.underlying_object_;
@@ -84,6 +92,33 @@ void msw::model::Song::set_path(std::string&& path) {
   reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->set_path(std::move(path));
 }
 
+void msw::model::Song::add_tag(std::string&& tag) {
+  reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->add_tags(std::move(tag));
+}
+
+void msw::model::Song::set_playcount(int32_t val) {
+  reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->set_playcnt(val);
+}
+
+void msw::model::Song::set_genre(std::string&& genre) {
+  SPDLOG_TRACE("Setting g {}", genre);
+  remove_key_valued(TAGENCODE_KW_GENRE, TAGENCODE_SZ_GENRE);
+  if (!genre.empty()) {
+    add_tag(TAGENCODE_KW_GENRE + std::move(genre));
+    // SPDLOG_TRACE("set; After is {}", this->genre());
+  }
+}
+
+std::string msw::model::Song::genre() const {
+  const auto tags = internal_immutable_tags();
+  const auto temp_item = iterator_of_tags_starts_with_fining(tags, TAGENCODE_KW_GENRE, TAGENCODE_SZ_GENRE);
+  if (iterator_of_tags_valid(temp_item)) {
+    SPDLOG_TRACE("Iterator is valid and it is {}", *temp_item);
+    return tags_extract(temp_item, TAGENCODE_SZ_GENRE);
+  }
+  return {};
+}
+
 const std::string& msw::model::Song::artist() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->artist();
 }
@@ -94,6 +129,16 @@ const std::string& msw::model::Song::title() const {
 
 const std::string& msw::model::Song::path() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->path();
+}
+
+std::string msw::model::Song::delimited_tags(std::string_view delimiter) const {
+  auto tags = internal_immutable_tags();
+  std::string returning{};
+  for (const auto& tag : tags) {
+    returning.append(tag).append(delimiter);
+  }
+  returning.erase(returning.end() - delimiter.size());
+  return returning;
 }
 
 int32_t msw::model::Song::playcount() const {
@@ -108,12 +153,10 @@ msw::model::SongPartDifferences msw::model::Song::similarity(const Song& rhs) co
 bool msw::model::Song::operator==(const Song& rhs) const {
   google::protobuf::util::MessageDifferencer dif;
   dif.IgnoreField(msw_proto_song::Song::GetDescriptor()->FindFieldByNumber(msw_proto_song::Song::kPlaycntFieldNumber));
+  dif.IgnoreField(msw_proto_song::Song::GetDescriptor()->FindFieldByNumber(msw_proto_song::Song::kTagsFieldNumber));
   return dif.Compare(*underlying_object_, *rhs.underlying_object_);
-
-  // const auto& wtf = *reinterpret_cast<msw_proto_song::Song*>(underlying_object_);
-  // return wtf.artist() == rhs.artist() && wtf.album() == rhs.album() && wtf.path() == rhs.path() &&
-  //       wtf.title() == rhs.title();
 }
+
 bool msw::model::Song::operator!=(const Song& rhs) const { return !operator==(rhs); }
 
 const std::string& msw::model::Song::album() const {
@@ -134,6 +177,10 @@ msw::model::Song& msw::model::Song::operator=(Song&& other) noexcept {
   return *this;
 }
 
+void msw::model::Song::remove_tag_strict(std::string_view tag_to_remove) {
+  remove_tag_by_iterator_if_valid(iterator_of_tags_exact_match(tag_to_remove));
+}
+
 msw::model::Song msw::model::Song::deserialize(const std::string& contents) {
   return from_string<msw_proto_song::Song>(contents);
 }
@@ -143,7 +190,14 @@ void msw::model::Song::increment_playcnt() {
   casted->set_playcnt(casted->playcnt() + 1);
 }
 
-msw::model::Song msw::model::Song::make_copy() const { return Song(album(), artist(), title(), path(), playcount()); }
+msw::model::Song msw::model::Song::make_copy() const {
+  return Song(album(),
+              artist(),
+              title(),
+              path(),
+              playcount(),
+              reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->tags());
+}
 
 // void msw::model::Song::copy_into(msw_proto_song::Song* changing) const {
 //
@@ -205,4 +259,23 @@ std::ostream& msw::model::operator<<(std::ostream& os, const msw::model::SongPar
     os << " path\n";
   }
   return os;
+}
+
+void msw::model::Song::remove_tag_by_iterator_if_valid(
+    const google::protobuf::internal::RepeatedPtrIterator<const std::string> temp_item) const {
+  SPDLOG_TRACE("We're asked to remove tag by iterator ...");
+  if (iterator_of_tags_valid(temp_item)) {
+    SPDLOG_TRACE("It valid: {}", *temp_item);
+    reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->mutable_tags()->erase(temp_item);
+  }
+}
+
+void msw::model::Song::remove_key_valued(const char* keyword, size_t kw_size) const {
+  remove_tag_by_iterator_if_valid(iterator_of_tags_starts_with_fining(internal_immutable_tags(), keyword, kw_size));
+}
+
+google::protobuf::internal::RepeatedPtrIterator<const std::string> msw::model::Song::iterator_of_tags_exact_match(
+    std::string_view tag_to_remove) const {
+  const auto& tags = reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->tags();
+  return std::find(tags.begin(), tags.end(), tag_to_remove);
 }

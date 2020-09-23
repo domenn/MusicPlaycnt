@@ -3,7 +3,7 @@ project(musicPlaycnt)
 
 set(CMAKE_CXX_STANDARD 20)
 include_directories(${CMAKE_SOURCE_DIR})
-add_definitions(-DSPDLOG_ACTIVE_LEVEL=1)
+add_definitions(-DSPDLOG_ACTIVE_LEVEL=0)
 
 # Function:                 EXCLUDE_FILES_FROM_DIR_IN_LIST
 # Description:              Exclude all files from a list under a specific directory.

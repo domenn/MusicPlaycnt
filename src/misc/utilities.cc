@@ -3,7 +3,9 @@
 #include "utilities.hpp"
 
 #include "consts.hpp"
+#include <filesystem>
 #include <src/data/pointers_to_globals.hpp>
+#include <src/model/app_config.hpp>
 #include <src/model/song.hpp>
 #include <src/win/encoding.hpp>
 #include <src/win/winapi_exceptions.hpp>
@@ -129,7 +131,7 @@ msw::helpers::CmdParse::ArgcArgv msw::helpers::CmdParse::ArgcArgv::from_wstring(
   std::vector<char> raw_data;
   std::vector<const char*> pointers;
 
-  SPDLOG_TRACE("Received commandline {}", wins_cmdline);
+  SPDLOG_TRACE("Received commandline {}", msw::encoding::utf16_to_utf8(wins_cmdline));
 
   wchar_t** output = CommandLineToArgvW(wins_cmdline, &num_args);
   pointers.push_back(nullptr);
@@ -150,10 +152,13 @@ msw::helpers::CmdParse::ArgcArgv msw::helpers::CmdParse::ArgcArgv::from_wstring(
 cxxopts::Options msw::helpers::CmdParse::create_options() {
   cxxopts::Options options(msw::consts::PROGRAM_NAME_SHORT, msw::consts::CLI_PROGRAM_DESCTIPTION);
   options.add_options()(co::listen_B, "Listener for file. Tray app.");
-  options.add_options()(co::artist_B, "Artist of current song.", cxxopts::value<std::string>()->default_value(""));
+  options.add_options()(co::artist_B, "Artist of current song.", cxxopts::value<std::string>()->default_value({}));
   options.add_options()(co::album_B, "Album of current song.", cxxopts::value<std::string>());
-  options.add_options()(co::title_B, "Title of current song.", cxxopts::value<std::string>()->default_value(""));
+  options.add_options()(co::title_B, "Title of current song.", cxxopts::value<std::string>()->default_value({}));
   options.add_options()(co::path_B, "Path of current song.", cxxopts::value<std::string>()->default_value(""));
+  options.add_options()(co::legacy_import_LO,
+                        "Import legacy beets database data. Exported from my Python software.",
+                        cxxopts::value<std::string>()->default_value({}));
   return options;
 }
 
@@ -187,6 +192,8 @@ msw::helpers::ParseSongItems msw::helpers::CmdParse::song_data() const {
           try_get<std::string>(co::title_LO),
           try_get<std::string>(co::path_LO)};
 }
+
+std::string msw::helpers::CmdParse::import_legacy_path() const { return try_get<std::string>(co::legacy_import_LO); }
 
 std::string& msw::helpers::Utilities::erase_all_of(std::string& str, char character) {
   // Removes characters but leaves gibberish on right, copying them left.
@@ -227,6 +234,19 @@ std::string& msw::helpers::Utilities::transform_replace_all(std::string& str,
     }
   }
   return str;
+}
+
+std::string msw::helpers::Utilities::shorten_path(const std::string& long_absolute_path) {
+  auto tmp_path =
+      (std::filesystem::relative(long_absolute_path, msw::pg::app_config->library_path()).lexically_normal().string());
+  if (tmp_path.empty()) {
+    throw exceptions::UserError(
+        "Path is empty. Make sure that the config is correct.\n(LibraryPath - configure the root of your music)");
+  }
+#ifdef _WIN32
+  msw::helpers::Utilities::transform_replace_all(tmp_path, '\\', "/", 1);
+#endif
+  return tmp_path;
 }
 
 namespace msw::pg {

@@ -5,6 +5,7 @@
 
 #include "flow_tests.hpp"
 #include "persistence_test.hpp"
+#include "util/tests_util_functions.hpp"
 #include <sago/platform_folders.h>
 #include <src/data/accessor.hpp>
 #include <src/misc/consts.hpp>
@@ -20,7 +21,7 @@ int main(int argc, char** argv) {
                          .default_logger_name("Music2_test")
                          .file_name("NewMusicTrackerCounter.log")
                          .log_to_file(false)
-                         .level(spdlog::level::debug)
+                         .level(spdlog::level::trace)
                          .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA));
 
   msw::data::TestsAccessor<msw::model::SongList> inst_song_list;
@@ -57,6 +58,17 @@ std::string msw::p_mk(std::string&& token) {
 void msw::musicstuffs::FooNpLogParser::init_lines_reader() {
   const auto* downcasted_me = reinterpret_cast<MockFooNpLogParser*>(this);
   reverse_line_reader_.emplace(std::make_unique<std::istringstream>(downcasted_me->line_to_parse_));
+}
+
+msw::model::Song msw::StringProvider::song_with_playcnt(
+    std::string a, std::string b, std::string c, std::string d, int32_t playcnt) {
+  msw::model::Song making_song(a, b, c, d);
+  making_song.set_playcount(playcnt);
+  return making_song;
+}
+
+msw::model::Song msw::StringProvider::get_simple_song() {
+  return std::make_from_tuple<msw::model::Song>(four_strings());
 }
 
 // --gtest_catch_exceptions=0 --gtest_filter=SongModel.diff*

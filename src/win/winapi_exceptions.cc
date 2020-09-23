@@ -53,3 +53,29 @@ std::wstring msw::exceptions::WinApiError::win_error_message() const {
   return msw::windows::format_windows_error_w(error_code_,
                                               encoding::utf8_to_utf16(getlasterror_function_.c_str()).c_str());
 }
+
+void msw::exceptions::information_for_user(const std::exception& x,
+                                           const TCHAR* heading,
+                                           InformationSeverity sev,
+                                           void* handle) {
+  if (sev == InformationSeverity::WARNING) {
+    SPDLOG_WARN("{} - {}", typeid(x).name(), x.what());
+  } else if (sev == InformationSeverity::CRITICAL) {
+    SPDLOG_CRITICAL("{} - {}", typeid(x).name(), x.what());
+  } else {
+    SPDLOG_INFO("{} - {}", typeid(x).name(), x.what());
+  }
+
+#ifdef _WIN32
+  const std::wstring what_w = [](const std::exception& x1) {
+    try {
+      return (dynamic_cast<const msw::exceptions::ApplicationError&>(x1)).what_w();
+    } catch (const std::bad_cast&) {
+      return msw::encoding::utf8_to_utf16(x1.what());
+    }
+  }(x);
+  const auto u_type = sev == InformationSeverity::CRITICAL ? MB_OK | MB_ICONERROR : MB_OK | MB_ICONWARNING;
+  MessageBoxW(static_cast<HWND>(handle), what_w.c_str(), heading, u_type);
+#else
+#endif
+}

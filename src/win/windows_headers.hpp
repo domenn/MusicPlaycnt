@@ -42,5 +42,8 @@
 #include <sys/stat.h>
 #endif
 // clang-format on
+#else
+
+typedef char TCHAR;
 
 #endif

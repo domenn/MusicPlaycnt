@@ -7,6 +7,17 @@
   A_LOCALLY_SCOPED_M_CPP_CHAR_CONST(nm, str)        \
   W_LOCALLY_SCOPED_M_CPP_CHAR_CONST(nm, str)
 
+
+#ifdef _WIN32
+#define T_LOCALLY_SCOPED_M_CPP_CHAR_CONST_PLATF_DEP(nm, str) constexpr static TCHAR nm[] = TEXT(str);
+#else
+#define T_LOCALLY_SCOPED_M_CPP_CHAR_CONST_PLATF_DEP(nm, str) constexpr static char nm[] = str;
+#endif
+
+
+
+#define LOCALLY_SCOPED_M_AW_CHAR_CONST_PLATF_DEPENDENT
+
 namespace msw::consts {
 
 LOCALLY_SCOPED_M_AW_CPP_CHAR_CONST(PROGRAM_NAME_SHORT, "musicPlaycnt2")
@@ -74,7 +85,13 @@ ONE_CMDOPTION_TEXT_CONSTANT(t, title)
 ONE_CMDOPTION_TEXT_CONSTANT(p, path)
 ONE_CMDOPTION_TEXT_CONSTANT(g, artist)
 ONE_CMDOPTION_TEXT_CONSTANT(o, op)
+ONE_CMDOPTION_TEXT_CONSTANT(q, legacy_import)
 }  // namespace cmdoptions
+
+T_LOCALLY_SCOPED_M_CPP_CHAR_CONST_PLATF_DEP(HEADING_LOGIC_ERROR, "Logic error")
+T_LOCALLY_SCOPED_M_CPP_CHAR_CONST_PLATF_DEP(HEADING_CRITICAL_EXC, "Windows API exception critical error")
+T_LOCALLY_SCOPED_M_CPP_CHAR_CONST_PLATF_DEP(HEADING_BAD_CMD, "Error parsing command line!")
+
 }  // namespace msw::consts
 
 #undef TOSTR_

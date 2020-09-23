@@ -1,4 +1,5 @@
 #include <src/win/windows_headers.hpp>
+#include "data/legacy_json_importer.hpp"
 
 #include "misc/spd_logging.hpp"
 #include "misc/utilities.hpp"
@@ -45,7 +46,19 @@ int main(int argc, char** argv) {
   SetThreadDescription(GetCurrentThread(), L"MainThread");
 #endif
 #ifdef _WIN32
-  msw::helpers::CmdParse cmd_parse(GetCommandLineW());
+  const std::optional<msw::helpers::CmdParse> cmd_parse([]() {
+    try {
+      return std::make_optional(msw::helpers::CmdParse(GetCommandLineW()));
+    } catch (const std::exception& x) {
+      SPDLOG_ERROR("Issue: msw::helpers::CmdParse(GetCommandLineW())");
+      msw::exceptions::information_for_user(
+          x, msw::consts::HEADING_BAD_CMD, msw::exceptions::InformationSeverity::CRITICAL);
+      return std::optional<msw::helpers::CmdParse>{};
+    }
+  }());
+  if (!cmd_parse.has_value()) {
+    return -1;
+  }
 #else
   msw::helpers::CmdParse cmd_parse(argc, argv);
 #endif
@@ -57,14 +70,17 @@ int main(int argc, char** argv) {
   msw::data::ProductionAccessor<msw::model::SongList> inst_songlist(cfg.stored_data());
   msw::pg::song_list = &inst_songlist;
 
-  if (cmd_parse.is_listen()) {
+  if (cmd_parse->is_listen()) {
     msw::tray::Tray main_tray(hInstance);
 
     return main_tray.run_message_loop();
   }
   // todo 2 Here I can get song .. and call the procedure (that is otherwise taken care inside message_loop).
-  SPDLOG_INFO(cmd_parse.song_data().artist);
+  // SPDLOG_INFO(cmd_parse->song_data().artist);
 
+  if (auto thingy = cmd_parse->import_legacy_path(); !thingy.empty()) {
+    LegacyJsonImporter li(std::move(thingy));
+  }
   return 0;
 }
 

@@ -1,17 +1,15 @@
 #pragma once
 
-#include <fmt/ostream.h>
+#include "util/tests_util_functions.hpp"
 #include <gtest/gtest.h>
 #include <src/data/accessor.hpp>
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/spd_logging.hpp>
 #include <src/misc/utilities.hpp>
-#include <src/model/app_config.hpp>
 #include <src/model/song.hpp>
 #include <src/model/song_list.hpp>
 #include <src/musicstuff/foo_np_log_parser.hpp>
 #include <src/win/winapi_exceptions.hpp>
-#include <test/util/string_provider.hpp>
 
 using namespace std::string_literals;
 using Song = msw::model::Song;
@@ -64,7 +62,7 @@ TEST(Fundamental, createSaveAndRestore) {
 
   msw::model::Song song1(std::move(proto_song));
   std::string serd = song1.serialize();
-  SPDLOG_INFO("Serialized first {}\n(as str: {})" , serd, song1);
+  SPDLOG_INFO("Serialized first {}\n(as str: {})", serd, song1);
 
   msw::model::Song song2 = msw::model::Song::deserialize(serd);
   SPDLOG_INFO("Restored and again serd ... what happens: {}", serd);
@@ -155,7 +153,14 @@ TEST(Misc, stackTraceOstreamDifferentSizes) {
 }
 #endif
 
-TEST(tbd1,not_eq) {
+TEST(Misc, str_starts_with) {
+  ASSERT_TRUE(msw::helpers::Utilities::starts_with("a11"s, "a", 1));
+  ASSERT_FALSE(msw::helpers::Utilities::starts_with("a11"s, "b", 1));
+  ASSERT_TRUE(msw::helpers::Utilities::starts_with("a11"s, "a1", 2));
+  ASSERT_FALSE(msw::helpers::Utilities::starts_with("a11"s, "a2", 2));
+}
+
+TEST(tbd1, not_eq) {
   msw::StringProvider sp;
   Song song1(sp.get_str(), sp.get_str(), sp.get_str(), sp.get_str());
   Song song2(song1.album(), song1.artist(), song1.title(), "RandomFN");
@@ -167,25 +172,77 @@ TEST(tbd1,not_eq) {
 }
 
 TEST(SongModel, diff_or_same) {
-  Song song1_1 {"a", "b", "c", "d", 1};
-  Song song1 {"a", "b", "c", "d", 1};
-  Song song2 {"a", "b", "c", "d", 2};
-  Song song3 {"b", "b", "c", "d", 2};
+  Song song1_1 = msw::StringProvider::song_with_playcnt("a", "b", "c", "d", 1);
+  Song song1 = msw::StringProvider::song_with_playcnt("a", "b", "c", "d", 1);
+  Song song2 = msw::StringProvider::song_with_playcnt("a", "b", "c", "d", 2);
+  Song song3 = msw::StringProvider::song_with_playcnt("b", "b", "c", "d", 2);
 
   ASSERT_EQ(song1, song1_1);
   ASSERT_EQ(song1, song2);
 }
 
 TEST(SongModel, copy) {
-  const Song song1 {"a", "b", "c", "d", 1};
+  const Song song1 = msw::StringProvider::song_with_playcnt("a", "b", "c", "d", 1);
 
-  msw::pg::song_list->write([&song1](SongList* mutated)
-  {
-    mutated->add_by_copying(song1.make_copy());
-  });
+  msw::pg::song_list->write([&song1](SongList* mutated) { mutated->add_by_copying(song1.make_copy()); });
 
   auto inserted = msw::pg::song_list->read()->operator[](0);
   ASSERT_EQ(inserted, song1);
+}
+
+TEST(SongModel, manipulate_genre) {
+  auto song1 = msw::StringProvider().get_simple_song();
+  auto set_and_test = [&song1](const std::string& stringy, const char* const msg, int line) {
+    song1.set_genre(std::string(stringy));
+    ASSERT_EQ(stringy, song1.genre()) << "Msg: " << msg << " at " << line;
+  };
+  ASSERT_TRUE(song1.genre().empty()) << "Genre must be empty initially.";
+
+  set_and_test("genre1", "first setting", __LINE__);
+  set_and_test("genre2", "change the value", __LINE__);
+  song1.add_tag("random1");
+  song1.add_tag("random2");
+  set_and_test("genre3", "added tags ... and changed genre", __LINE__);
+  set_and_test("genre3", "set to equal ...", __LINE__);
+  set_and_test("", "empty one", __LINE__);
+  set_and_test("genre4", "not empty anymore.", __LINE__);
+  song1.add_tag("random3");
+  ASSERT_EQ("genre4", song1.genre()) << "Added tag. Genre must remain.";
+  song1.remove_tag_strict("random2");
+  ASSERT_EQ("genre4", song1.genre()) << "Removed some tag. Genre must remain.";
+}
+
+TEST(SongModel, manipulate_tags) {
+  auto song1 = msw::StringProvider().get_simple_song();
+  song1.add_tag("first");
+  ASSERT_EQ("first", song1.delimited_tags());
+  song1.add_tag("2");
+  ASSERT_EQ("first,2", song1.delimited_tags());
+  ASSERT_EQ("first;;;2", song1.delimited_tags(";;;"));
+
+  song1.add_tag("three");
+  ASSERT_EQ("first,2,three", song1.delimited_tags());
+
+  song1.remove_tag_strict("2");
+  ASSERT_EQ("first,three", song1.delimited_tags()) << "remove middle";
+
+  song1.add_tag("2");
+  ASSERT_EQ("first,three,2", song1.delimited_tags()) << "reordered";
+  song1.add_tag("6");
+  song1.add_tag("7");
+  ASSERT_EQ("first,three,2,6,7", song1.delimited_tags()) << "two more";
+
+  song1.remove_tag_strict("first");
+  ASSERT_EQ("three,2,6,7", song1.delimited_tags()) << "remove at beginning (first)";
+
+  song1.remove_tag_strict("7");
+  ASSERT_EQ("three,2,6", song1.delimited_tags()) << "remove at end (last)";
+
+  song1.remove_tag_strict("2");
+  song1.remove_tag_strict("three");
+  ASSERT_EQ("6", song1.delimited_tags()) << "One remains.";
+  song1.remove_tag_strict("6");
+  ASSERT_EQ("", song1.delimited_tags()) << "One remains.";
 }
 
 // class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {

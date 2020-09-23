@@ -8,6 +8,7 @@ message Song {
     string title = 3;
     string path = 4;
     int32 playcnt = 5;
+    repeated string tags = 6;
 }
 
 message Songs {

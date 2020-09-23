@@ -8,7 +8,6 @@
 #include <vector>
 
 namespace msw::exceptions {
-
 struct TraceEntry {
   int line_{};
   std::string function_{};
@@ -168,6 +167,14 @@ class WinApiError : public ErrorCode {
 
   virtual std::wstring win_error_message() const;
 };
+
+enum class InformationSeverity {
+  INFO,
+  WARNING,
+  CRITICAL
+};
+
+void information_for_user(const std::exception& x, const TCHAR* heading, InformationSeverity sev = InformationSeverity::WARNING, void* handle = nullptr);
 
 }  // namespace msw::exceptions
 

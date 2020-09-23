@@ -34,24 +34,15 @@ class Handler {
 
 Handler::Handler(SongWithMetadata&& new_song) : new_song_(std::move(new_song)) {
   // "normalize" the path
-  auto tmp_path = (std::filesystem::relative(new_song_.get_song().path(), msw::pg::app_config->library_path())
-                       .lexically_normal()
-                       .string());
-  if (tmp_path.empty()) {
-    throw exceptions::UserError(
-        "Path is empty. Make sure that the config is correct.\n(LibraryPath - configure the root of your music)");
-  }
-#ifdef _WIN32
-  msw::helpers::Utilities::transform_replace_all(tmp_path, '\\', "/", 1);
-#endif
-  new_song_.get_song().set_path(std::move(tmp_path));
+  new_song_.get_song().set_path(std::move(msw::helpers::Utilities::shorten_path(new_song_.get_song().path())));
 }
 
 void Handler::potentially_update_playcnt_for_current() {
   assert(new_song_.action_type() == ActionType::PLAY);
   const auto current_song_reader = pg::handled_song->read();
   if (current_song_reader->get_song() == new_song_.get_song()) {
-    // TODO: Same song is supported. When I play ... It may've been paused before. If that's the case, reset action time and go on ...
+    // TODO: Same song is supported. When I play ... It may've been paused before. If that's the case, reset action time
+    // and go on ...
     SPDLOG_ERROR("Strange situation. Songs (new and current) - ({}) are same", new_song_.get_song());
     return;
   }
