@@ -118,6 +118,10 @@ endif ()
 #  message(STATUS "fnd lib: ${platform_folders_DIR}")
 #endif()
 
+include(scripts/util_find_lib_custom.cmake)
+
+find_lib_custom(wintoast VERBOSE)
+
 target_link_libraries(codeMusicPlaycnt PUBLIC sago::platform_folders spdlog::spdlog protobuf::libprotobuf)
 target_link_libraries(musicPlaycnt PUBLIC codeMusicPlaycnt)
 
