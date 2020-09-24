@@ -100,11 +100,6 @@ LRESULT CALLBACK Tray::wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
         return uHitTest;
       }
       case CUSTOM_THREAD_IS_DOWN:
-        // MessageBox(
-        //    nullptr,
-        //    I1::MSG_WORKER_THREAD_DIED,
-        //    I1::MSG_ERROR_HEADER,
-        //    MB_ICONEXCLAMATION | MB_OK);
         assert(false && "not really implemented .... what next?");
         get_tray_from_window(hwnd)->on_exit();
       case CUSTOM_CHANGE_NOTIFY:

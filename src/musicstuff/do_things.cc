@@ -20,6 +20,7 @@ namespace msw::do_things {
 class Handler {
   SongWithMetadata new_song_;
   ActionType new_song_action_type_{new_song_.action_type()};
+  uint64_t new_song_action_ts_{new_song_.action_timestamp()};
 
   void potentially_update_playcnt_for_current();
   void update_timestamp_for_current();
@@ -41,20 +42,28 @@ void Handler::potentially_update_playcnt_for_current() {
   assert(new_song_.action_type() == ActionType::PLAY);
   const auto current_song_reader = pg::handled_song->read();
   if (current_song_reader->get_song() == new_song_.get_song()) {
-    // TODO: Same song is supported. When I play ... It may've been paused before. If that's the case, reset action time
-    // and go on ...
-    SPDLOG_ERROR("Strange situation. Songs (new and current) - ({}) are same", new_song_.get_song());
+    const auto TS_BEFORE = current_song_reader->action_timestamp();
+    SPDLOG_TRACE("Before: {}; playcount {}", current_song_reader->get_song(), TS_BEFORE);
+    pg::handled_song->write([this](auto* current_song) {
+      current_song->set_action_type(new_song_.action_type());
+      current_song->set_timestamp_of_action(new_song_action_ts_);
+    });
+    SPDLOG_LOGGER_INFO(L_MSW_EVTS,
+                       "Existing song {} gets action timestamp updated from \n  {}    to\n  {}",
+                       current_song_reader->get_song(),
+                       TS_BEFORE,
+                       current_song_reader->action_timestamp());
     return;
   }
-  const auto actual_pt = current_song_reader->recalculate_playing_time(new_song_.action_timestamp());
+  const auto actual_pt = current_song_reader->recalculate_playing_time(new_song_action_ts_);
+  if (current_song_reader->invalid()) {
+    return;
+  }
   if (actual_pt > static_cast<uint64_t>(pg::app_config->playcount_threshold_ms())) {
     pg::song_list->write([&current_song_reader](msw::model::SongList* sl) {
       auto opt_found = sl->find_matching_song(current_song_reader->get_song());
       if (opt_found != std::nullopt) {
-        SPDLOG_LOGGER_INFO(L_MSW_EVTS,
-                           "Incrementing existing song - {}\n (previous playcount: {})",
-                           *opt_found,
-                           opt_found->playcount());
+        SPDLOG_LOGGER_INFO(L_MSW_EVTS, "Incrementing existing song from {} - {}", opt_found->playcount(), *opt_found);
         opt_found->increment_playcnt();
       } else {
         assert(current_song_reader->get_song().playcount() == 0);
@@ -68,19 +77,18 @@ void Handler::potentially_update_playcnt_for_current() {
 
 void Handler::update_timestamp_for_current() {
   assert(new_song_.action_type() == ActionType::PAUSE || new_song_.action_type() == ActionType::STOP);
-  pg::handled_song->write([this](SongWithMetadata* thingy) {
-    if (new_song_.get_song() != thingy->get_song()) {
-      throw msw::exceptions::InformationalApplicationError(
-          fmt::format("Pausing. But current song\n{}\n  is not the one we have cached\n{}\n   Not supported. Please "
-                      "add support.",
-                      thingy->get_song(),
-                      new_song_.get_song())
-              .c_str(),
-          MSW_TRACE_ENTRY_CREATE);
+  auto* rd = pg::handled_song->read();
+  if (new_song_.get_song() != rd->get_song()) {
+    SPDLOG_LOGGER_WARN(L_MSW_EVTS, "Pause; But SONGS DIFFER! \n{}\n AND \n{}\n", rd->get_song(), new_song_.get_song());
+    if (!rd->invalid()) {
+      new_song_action_ts_ = rd->action_timestamp();
+      potentially_update_playcnt_for_current();
     }
-    thingy->on_stop_or_pause(new_song_action_type_, new_song_.action_timestamp());
-  });
-}
+    return;
+  }
+  pg::handled_song->write(
+      [this](SongWithMetadata* thingy) { thingy->on_stop_or_pause(new_song_action_type_, new_song_action_ts_); });
+}  // namespace msw::do_things
 
 bool Handler::equals_or_throw() {
   const auto song_wip = pg::handled_song->read()->get_song();

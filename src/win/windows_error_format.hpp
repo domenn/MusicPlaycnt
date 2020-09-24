@@ -21,6 +21,6 @@ std::wstring format_windows_error_w(uint32_t error_code, const wchar_t* lpszFunc
  */
 std::wstring format_get_last_error_w(const wchar_t* lpszFunction);
 
-inline std::string format_windows_error(uint32_t error_code, const char* function);
+std::string format_windows_error(uint32_t error_code, const char* function);
 
 }  // namespace msw::windows

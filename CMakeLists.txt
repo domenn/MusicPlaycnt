@@ -11,7 +11,7 @@ add_definitions(-DSPDLOG_ACTIVE_LEVEL=0)
 # Param _excludeDirName:    Name of the directory, which shall be ignored.
 # Param _verbose:           Print the names of the files handled
 
-FUNCTION (EXCLUDE_FILES_FROM_DIR_IN_LIST _InFileList _excludeDirName _verbose)
+FUNCTION(EXCLUDE_FILES_FROM_DIR_IN_LIST _InFileList _excludeDirName _verbose)
   foreach (ITR ${_InFileList})
     if ("${_verbose}")
       message(STATUS "ITR=${ITR}")
@@ -19,12 +19,12 @@ FUNCTION (EXCLUDE_FILES_FROM_DIR_IN_LIST _InFileList _excludeDirName _verbose)
     
     if ("${ITR}" MATCHES "(.*)${_excludeDirName}(.*)")                   # Check if the item matches the directory name in _excludeDirName
       message(STATUS "Remove Item from List:${ITR}")
-      list (REMOVE_ITEM _InFileList ${ITR})                              # Remove the item from the list
+      list(REMOVE_ITEM _InFileList ${ITR})                              # Remove the item from the list
     endif ("${ITR}" MATCHES "(.*)${_excludeDirName}(.*)")
   
-  endforeach(ITR)
+  endforeach (ITR)
   set(SOURCE_FILES ${_InFileList} PARENT_SCOPE)                          # Return the SOURCE_FILES variable to the calling parent
-ENDFUNCTION (EXCLUDE_FILES_FROM_DIR_IN_LIST)
+ENDFUNCTION(EXCLUDE_FILES_FROM_DIR_IN_LIST)
 
 
 if (WIN32)
@@ -111,7 +111,7 @@ if (MSVC)
   find_package(platform_folders REQUIRED HINTS ${CMAKE_SOURCE_DIR}/ext/installs_msvc)
 elseif (UNIX)
   find_package(platform_folders REQUIRED HINTS ${CMAKE_SOURCE_DIR}/ext/installs_lnx)
-else()
+else ()
   find_package(platform_folders REQUIRED HINTS ${CMAKE_SOURCE_DIR}/ext/installs)
 endif ()
 #if(${platform_folders_FOUND})
@@ -119,10 +119,37 @@ endif ()
 #endif()
 
 include(scripts/util_find_lib_custom.cmake)
+# include(scripts/write_variables.cmake)
 
-find_lib_custom(wintoast VERBOSE)
+# COPY_FILES_TO_OTHER_LIST("${CMAKE_FIND_ROOT_PATH}" /debug 0 1)
+# message(STATUS "${SOURCE_FILES} .. AND .. ${TRANSFERED_FILES}")
 
-target_link_libraries(codeMusicPlaycnt PUBLIC sago::platform_folders spdlog::spdlog protobuf::libprotobuf)
+# write_all_stuff()
+
+# find_lib_custom(wintoastQQ VERBOSE IGNORE_CACHE REQUIRED)
+find_lib_custom(wintoast)
+
+if (wintoast_LINKER)
+  message(STATUS "HAS")
+  TARGET_COMPILE_DEFINITIONS(codeMusicPlaycnt PUBLIC DOMEN_WITH_WINTOAST)
+  TARGET_SOURCES(musicPlaycnt PRIVATE Res/notification_sink_wintoast.cc)
+else ()
+  message(STATUS "not -____ has")
+endif ()
+
+# UNSET(wintoastDbg CACHE)
+# UNSET(wintoastRel CACHE)
+
+# find_library(wintoastDbg NAMES wintoast PATHS ${TRANSFERED_FILES} NO_DEFAULT_PATH)
+# find_library(wintoastRel NAMES wintoast PATHS ${SOURCE_FILES} NO_DEFAULT_PATH)
+
+
+#message(STATUS ${wintoastDbg})
+#message(STATUS ${wintoastRel})
+
+# find_library(${_LIB_NAME}_LINKER_RELEASE NAMES ${_LIB_NAME} PATHS ${FLC_PATHS} ${find_library_EXTRA_PARAMS})
+
+target_link_libraries(codeMusicPlaycnt PUBLIC sago::platform_folders spdlog::spdlog protobuf::libprotobuf ${wintoast_LINKER})
 target_link_libraries(musicPlaycnt PUBLIC codeMusicPlaycnt)
 
 # find_path(plog_inc NAMES "plog/Log.h" HINTS ${CMAKE_SOURCE_DIR}/ext/installs/include)

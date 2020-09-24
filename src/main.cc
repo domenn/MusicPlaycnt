@@ -13,6 +13,9 @@
 #include <sago/platform_folders.h>
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/consts.hpp>
+#include <src/misc/notification_sink.hpp>
+
+extern std::vector<spdlog::sink_ptr> additional_sinks;
 
 msw::model::AppConfig get_or_create_config() {
   try {
@@ -34,10 +37,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
                     _In_ LPWSTR lpCmdLine,
                     _In_ int nShowCmd) {
   SetConsoleOutputCP(CP_UTF8);
-  // Todo first thing: if I am in "pause" and I go into "play" (or other way) there is red logs. I need to support the scenario.
-  // Todo next: if song is 75% same (only differs on path) we need to warn the user. For example ... I add new, then move it.
-  // Todo: some tracking mode ... to make sure playcnt is correct. Windows notification, I guess.
-  // Todo: Duplicates. For example, I try to add song that already exist. Same title and artist, others may differ. We warn.
+  // Todo first thing: if I am in "pause" and I go into "play" (or other way) there is red logs. I need to support the
+  // scenario. Todo next: if song is 75% same (only differs on path) we need to warn the user. For example ... I add
+  // new, then move it. Todo: some tracking mode ... to make sure playcnt is correct. Windows notification, I guess.
+  // Todo: Duplicates. For example, I try to add song that already exist. Same title and artist, others may differ. We
+  // warn.
 #else
 int main(int argc, char** argv) {
 #endif
@@ -47,6 +51,11 @@ int main(int argc, char** argv) {
                          .pattern(spdl::SpdlogConfig::PATTERN_ALL_DATA)
                          .level(spdlog::level::trace)
                          .log_to_file(true));
+
+#if defined(DOMEN_WITH_WINTOAST) // || defined(_MSC_VER) ;NOTE: other notification impls.
+  additional_sinks.emplace_back(std::make_shared<spdl::NotificationSink>());
+#endif  // defined(DOMEN_WITH_WINTOAST) || defined(_MSC_VER)
+
 #if defined(_DLL) && defined(_MSC_VER)
   SetThreadDescription(GetCurrentThread(), L"MainThread");
 #endif

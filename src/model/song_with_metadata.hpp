@@ -25,10 +25,12 @@ class SongWithMetadata : public Serializable {
   void set_action_type(ActionType);
 
   msw::model::Song get_song();
+  /*msw::model::Song get_song() const;*/
   ActionType action_type();
   uint64_t action_timestamp() const;
   uint64_t playing_ms() const;
   void set_playing_ms(uint64_t value);
+  bool invalid() const;
   std::string serialize_to_str();
   /**
    * Sets the new state. And also updates own playtime.
