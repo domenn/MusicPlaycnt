@@ -48,11 +48,8 @@ FUNCTION(find_lib_custom _LIB_NAME)
   find_library(${_LIB_NAME}_LINKER_RELEASE NAMES ${_LIB_NAME} PATHS ${FLC_PATHS} ${find_library_EXTRA_PARAMS})
   
   if (${_LIB_NAME}_LINKER_RELEASE MATCHES ".*[/]debug[/]lib")
-    # message(STATUS "${_LIB_NAME}_LINKER_RELEASE matches")
     set(${_LIB_NAME}_LINKER_DEBUG "${${_LIB_NAME}_LINKER_RELEASE}")
     string(REPLACE /debug/lib /lib ${_LIB_NAME}_LINKER_RELEASE "${${_LIB_NAME}_LINKER_RELEASE}")
-    #  else ()
-    #    message(STATUS "${_LIB_NAME}_LINKER_RELEASE NOT matches")
   endif ()
   
   if ("${${_LIB_NAME}_LINKER_DEBUG}" STREQUAL "${_LIB_NAME}_LINKER_DEBUG-NOTFOUND" AND "${${_LIB_NAME}_LINKER_RELEASE}" STREQUAL "${_LIB_NAME}_LINKER_RELEASE-NOTFOUND")
@@ -109,11 +106,6 @@ endfunction()
 # Return SOURCE_FILES:      Modified input list
 # Return TRANSFERED_FILES:  List of matched files
 FUNCTION(COPY_FILES_TO_OTHER_LIST _InFileList _relevantFileName _verbose _remove)
-  #  if ("${_verbose}")
-  #    message(STATUS "tHE mE VeRBoSE ${_InFileList} ${_relevantFileName} ${_verbose} ${_remove}")
-  #  else ()
-  #    message(STATUS "____noVerbose  ${_InFileList} ${_relevantFileName} ${_verbose} ${_remove}")
-  #  endif ("${_verbose}")
   foreach (ITR ${_InFileList})
     if ("${ITR}" MATCHES "(.*)${_relevantFileName}([A-Za-z_\\.0-9]*)")    # Check if the item matches the name received in _relevantFileName
       # Above if is also true for partial matches. So we have to make sure whole string was matched.

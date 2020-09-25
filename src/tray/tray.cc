@@ -222,6 +222,7 @@ int Tray::run_message_loop() {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
+  SPDLOG_TRACE("Normal exit ... {}", static_cast<int>(msg.wParam));
   return static_cast<int>(msg.wParam);
 }
 

@@ -1,19 +1,18 @@
 #include <src/win/windows_headers.hpp>
 
-#include "data/legacy_json_importer.hpp"
-#include "misc/spd_logging.hpp"
-#include "misc/utilities.hpp"
-#include "model/app_config.hpp"
-#include "musicstuff/foo_np_log_parser.hpp"
-#include "tray/tray.hpp"
-#include "win/winapi_exceptions.hpp"
 #include <exe_only_src/production_accessor.hpp>
 #include <fstream>
 #include <processthreadsapi.h>
 #include <sago/platform_folders.h>
+#include <src/data/legacy_json_importer.hpp>
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/consts.hpp>
 #include <src/misc/notification_sink.hpp>
+#include <src/misc/spd_logging.hpp>
+#include <src/model/app_config.hpp>
+#include <src/musicstuff/foo_np_log_parser.hpp>
+#include <src/tray/tray.hpp>
+#include <src/win/winapi_exceptions.hpp>
 
 extern std::vector<spdlog::sink_ptr> additional_sinks;
 
@@ -31,6 +30,16 @@ msw::model::AppConfig get_or_create_config() {
   }
 }
 
+template <typename func_t>
+class FinalAction {
+  func_t f_;
+
+ public:
+  explicit FinalAction(func_t&& f) : f_(std::move(f)) {}
+
+  ~FinalAction() { f_(); }
+};
+
 #ifdef _WIN32
 int WINAPI wWinMain(_In_ HINSTANCE hInstance,
                     _In_opt_ HINSTANCE hPrevInstance,
@@ -42,6 +51,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance,
   // new, then move it. Todo: some tracking mode ... to make sure playcnt is correct. Windows notification, I guess.
   // Todo: Duplicates. For example, I try to add song that already exist. Same title and artist, others may differ. We
   // warn.
+  // TODO: show console by default / always ... make it hidable.
 #else
 int main(int argc, char** argv) {
 #endif
@@ -52,9 +62,11 @@ int main(int argc, char** argv) {
                          .level(spdlog::level::trace)
                          .log_to_file(true));
 
-#if defined(DOMEN_WITH_WINTOAST) // || defined(_MSC_VER) ;NOTE: other notification impls.
+#if defined(DOMEN_WITH_WINTOAST)  // || defined(_MSC_VER) ;NOTE: other notification impls.
   additional_sinks.emplace_back(std::make_shared<spdl::NotificationSink>());
 #endif  // defined(DOMEN_WITH_WINTOAST) || defined(_MSC_VER)
+
+  FinalAction fa(&spdl::spdlog_teardown);
 
 #if defined(_DLL) && defined(_MSC_VER)
   SetThreadDescription(GetCurrentThread(), L"MainThread");

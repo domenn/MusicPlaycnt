@@ -51,6 +51,7 @@ void set_level(const char *name, spdlog::level::level_enum new_lvl);
 std::shared_ptr<spdlog::logger> &get_as_shared(const char *name);
 void set_log_file(spdlog::filename_t file_name);
 void spdlog_setup(SpdlogConfig &&cfg = {});
+void spdlog_teardown();
 /**
  * Provide a string either full name or single letter name. Does not check name validity.
  * Passing empty string returns current level. If name is invalid, there is undefined

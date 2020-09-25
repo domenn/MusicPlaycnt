@@ -66,14 +66,14 @@ file(GLOB_RECURSE musicPlaycntExeOnlySRC LIST_DIRECTORIES false
     "${CMAKE_CURRENT_SOURCE_DIR}/exe_only_src/*.cc"
     "${CMAKE_CURRENT_SOURCE_DIR}/exe_only_src/*.hpp")
 
-EXCLUDE_FILES_FROM_DIR_IN_LIST(musicPlaycntSRC .*main.cc 0)
+# EXCLUDE_FILES_FROM_DIR_IN_LIST(musicPlaycntSRC .*main.cc 0)
 
 if (MSVC)
   list(APPEND musicPlaycntSRC "${CMAKE_SOURCE_DIR}/external/StackWalker.cpp")
 endif ()
 
 
-add_executable(musicPlaycnt "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cc" "${CMAKE_CURRENT_SOURCE_DIR}/Res/tray.rc"
+add_executable(musicPlaycnt "${CMAKE_CURRENT_SOURCE_DIR}/Res/tray.rc"
     "${CMAKE_CURRENT_SOURCE_DIR}/Res/resource.hpp" ${musicPlaycntExeOnlySRC}
     )
 add_library(codeMusicPlaycnt ${musicPlaycntSRC})
@@ -114,53 +114,14 @@ elseif (UNIX)
 else ()
   find_package(platform_folders REQUIRED HINTS ${CMAKE_SOURCE_DIR}/ext/installs)
 endif ()
-#if(${platform_folders_FOUND})
-#  message(STATUS "fnd lib: ${platform_folders_DIR}")
-#endif()
 
 include(scripts/util_find_lib_custom.cmake)
-# include(scripts/write_variables.cmake)
-
-# COPY_FILES_TO_OTHER_LIST("${CMAKE_FIND_ROOT_PATH}" /debug 0 1)
-# message(STATUS "${SOURCE_FILES} .. AND .. ${TRANSFERED_FILES}")
-
-# write_all_stuff()
-
-# find_lib_custom(wintoastQQ VERBOSE IGNORE_CACHE REQUIRED)
 find_lib_custom(wintoast)
 
 if (wintoast_LINKER)
-  message(STATUS "HAS")
   TARGET_COMPILE_DEFINITIONS(codeMusicPlaycnt PUBLIC DOMEN_WITH_WINTOAST)
   TARGET_SOURCES(musicPlaycnt PRIVATE Res/notification_sink_wintoast.cc)
-else ()
-  message(STATUS "not -____ has")
 endif ()
-
-# UNSET(wintoastDbg CACHE)
-# UNSET(wintoastRel CACHE)
-
-# find_library(wintoastDbg NAMES wintoast PATHS ${TRANSFERED_FILES} NO_DEFAULT_PATH)
-# find_library(wintoastRel NAMES wintoast PATHS ${SOURCE_FILES} NO_DEFAULT_PATH)
-
-
-#message(STATUS ${wintoastDbg})
-#message(STATUS ${wintoastRel})
-
-# find_library(${_LIB_NAME}_LINKER_RELEASE NAMES ${_LIB_NAME} PATHS ${FLC_PATHS} ${find_library_EXTRA_PARAMS})
 
 target_link_libraries(codeMusicPlaycnt PUBLIC sago::platform_folders spdlog::spdlog protobuf::libprotobuf ${wintoast_LINKER})
 target_link_libraries(musicPlaycnt PUBLIC codeMusicPlaycnt)
-
-# find_path(plog_inc NAMES "plog/Log.h" HINTS ${CMAKE_SOURCE_DIR}/ext/installs/include)
-#message(STATUS ${plog_inc})
-#message(STATUS "HINTS ${CMAKE_SOURCE_DIR}/ext/installs/include")
-# target_include_directories(musicPlaycnt PRIVATE ${plog_inc})
-# target_compile_definitions(musicPlaycnt PRIVATE PLOG_CAPTURE_FILE)
-
-
-#find_package(protobuf CONFIG REQUIRED)
-#target_link_libraries(main PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)
-
-#find_package(protobuf CONFIG REQUIRED)
-#target_link_libraries(main PRIVATE protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite)

@@ -9,6 +9,7 @@
 
 spdlog::filename_t log_filename{};
 bool log_to_file{true};
+bool tearing_down{false};
 spdlog::level::level_enum my_level{spdlog::level::level_enum::info};
 
 std::map<std::string, std::shared_ptr<spdlog::logger>> all_loggers;
@@ -58,7 +59,9 @@ std::shared_ptr<spdlog::logger> spdl::make_new_logger(const char *name) {
   shartedptr_lg->set_level(my_level);
 
   shartedptr_lg->set_pattern(log_pattern);
+#ifndef NDEBUG
   vs_sink->set_pattern("%g(%#): " + log_pattern);
+#endif
   if (potential_exception) {
     SPDLOG_LOGGER_WARN(shartedptr_lg,
                        "Problem with opening file. Logging to file is probably not possible. Exception was: {}",
@@ -73,8 +76,23 @@ std::shared_ptr<spdlog::logger> &spdl::get_as_shared(const char *name) {
   auto created = all_loggers.emplace(name, make_new_logger(name));
   return created.first->second;
 }
-spdlog::logger *spdl::get(const char *name) { return get_as_shared(name).get(); }
+spdlog::logger *spdl::get(const char *name) {
+  if (tearing_down) {
+    return spdlog::default_logger_raw();
+  }
+  return get_as_shared(name).get();
+}
 void spdl::set_log_file(spdlog::filename_t file_name) { log_filename = std::move(file_name); }
+void spdl::spdlog_teardown() {
+  tearing_down = true;
+  additional_sinks.clear();
+  for (auto &all_logger : all_loggers) {
+    all_logger.second->set_level(spdlog::level::off);
+    all_logger.second->sinks().clear();
+    spdlog::drop(all_logger.first);
+  }
+  all_loggers.clear();
+}
 void spdl::spdlog_setup(SpdlogConfig &&cfg) {
   log_pattern = std::move(cfg.pattern);
   if (!cfg.file_name.empty()) {

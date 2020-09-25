@@ -39,7 +39,6 @@ Handler::Handler(SongWithMetadata&& new_song) : new_song_(std::move(new_song)) {
 }
 
 void Handler::potentially_update_playcnt_for_current() {
-  assert(new_song_.action_type() == ActionType::PLAY);
   const auto current_song_reader = pg::handled_song->read();
   if (current_song_reader->get_song() == new_song_.get_song()) {
     const auto TS_BEFORE = current_song_reader->action_timestamp();
