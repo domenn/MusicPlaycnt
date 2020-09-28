@@ -1,11 +1,11 @@
 #pragma once
 
 #if _WIN32
-#include <fcntl.h>
-#include <share.h>
+#include "../win/windows_headers.hpp"
 
 #include "../win/encoding.hpp"
-#include "../win/windows_headers.hpp"
+#include <fcntl.h>
+#include <share.h>
 #endif
 
 enum class OpenModeWin : int {

@@ -151,14 +151,14 @@ msw::helpers::CmdParse::ArgcArgv msw::helpers::CmdParse::ArgcArgv::from_wstring(
 
 cxxopts::Options msw::helpers::CmdParse::create_options() {
   cxxopts::Options options(msw::consts::PROGRAM_NAME_SHORT, msw::consts::CLI_PROGRAM_DESCTIPTION);
-  options.add_options()(co::listen_B, "Listener for file. Tray app.");
-  options.add_options()(co::artist_B, "Artist of current song.", cxxopts::value<std::string>()->default_value({}));
-  options.add_options()(co::album_B, "Album of current song.", cxxopts::value<std::string>());
-  options.add_options()(co::title_B, "Title of current song.", cxxopts::value<std::string>()->default_value({}));
-  options.add_options()(co::path_B, "Path of current song.", cxxopts::value<std::string>()->default_value(""));
-  options.add_options()(co::legacy_import_LO,
-                        "Import legacy beets database data. Exported from my Python software.",
-                        cxxopts::value<std::string>()->default_value({}));
+  options.add_options()(co::listen_B, "Listener for file. Tray app.")(
+      co::artist_B, "Artist of current song.", cxxopts::value<std::string>()->default_value({}))(
+      co::album_B, "Album of current song.", cxxopts::value<std::string>())(
+      co::title_B, "Title of current song.", cxxopts::value<std::string>()->default_value({}))(
+      co::path_B, "Path of current song.", cxxopts::value<std::string>()->default_value(""))(
+      co::legacy_import_LO,
+      "Import legacy beets database data. Exported from my Python software.",
+      cxxopts::value<std::string>()->default_value({}))("h,help", "Print usage");
   return options;
 }
 
@@ -194,6 +194,14 @@ msw::helpers::ParseSongItems msw::helpers::CmdParse::song_data() const {
 }
 
 std::string msw::helpers::CmdParse::import_legacy_path() const { return try_get<std::string>(co::legacy_import_LO); }
+
+bool msw::helpers::CmdParse::help() const {
+  if (result_.count("help")) {
+    std::cout << options_.help() << std::endl;
+    return true;
+  }
+  return false;
+}
 
 std::string& msw::helpers::Utilities::erase_all_of(std::string& str, char character) {
   // Removes characters but leaves gibberish on right, copying them left.

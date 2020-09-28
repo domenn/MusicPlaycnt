@@ -7,8 +7,8 @@
 #include "../protobufs/songs.pb.h"
 #include "serializable.hpp"
 #include <ostream>
-#include <src/misc/utilities.hpp>
 #include <src/misc/custom_include_spdlog.hpp>
+#include <src/misc/utilities.hpp>
 
 namespace msw {
 namespace helpers {
@@ -119,7 +119,7 @@ class Song : public Serializable {
 
   bool operator!=(const Song& rhs) const;
 
-  operator msw_proto_song::Song*() const;
+  operator msw_proto_song::Song *() const;
 
   friend std::ostream& operator<<(std::ostream& os, const Song& obj);
   void increment_playcnt();
@@ -128,8 +128,8 @@ class Song : public Serializable {
 
  private:
   static bool tags_kw_find_if_genre(const std::string& t);
-  //template <class proto_tags_t>
-  //static auto iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size);
+  // template <class proto_tags_t>
+  // static auto iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size);
   template <class proto_tags_t>
   static auto iterator_of_tag_exact_match(proto_tags_t tags, std::string_view tag_to_search);
   void internal_remove_genre(const char* keyword, size_t kw_size) const;
@@ -162,8 +162,8 @@ inline bool msw::model::Song::tags_kw_find_if_genre(const std::string& t) {
   return msw::helpers::Utilities::starts_with(t, TAGENCODE_KW_GENRE, TAGENCODE_SZ_GENRE);
 }
 
-//template <typename proto_tags_t>
-//auto msw::model::Song::iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size) {
+// template <typename proto_tags_t>
+// auto msw::model::Song::iterator_of_tags_starts_with_fining(proto_tags_t tags, const char* keyword, size_t kw_size) {
 //  const auto temp_item = std::find_if(begin_or_end<true>(tags), begin_or_end<false>(tags), [&](const std::string& t) {
 //    return msw::helpers::Utilities::starts_with(t, keyword, kw_size);
 //  });

@@ -8,10 +8,10 @@
 using namespace WinToastLib;
 
 std::mutex my_awsome_mutex;
-//std::vector<int64_t> displayed_items{};
-//std::vector<int64_t> displayed_items_unsafe{};
+// std::vector<int64_t> displayed_items{};
+// std::vector<int64_t> displayed_items_unsafe{};
 //
-//std::vector<int64_t>* safer_displayed_items{};
+// std::vector<int64_t>* safer_displayed_items{};
 
 #define BAIL_IF_DOWN \
   if (!is_up_) {     \
@@ -23,6 +23,14 @@ auto make_templ() {
   templ.setDuration(WinToastTemplate::System);
   templ.setAudioOption(WinToastTemplate::Silent);
   return templ;
+}
+
+void spdl::wintoast::DomenWithWinToastHandler::toastActivated() const {
+  auto time = msw::helpers::format_some_input<std::wostringstream>(L"%d.%m.%Y %H.%M.%S", time_);
+  time << L'.';
+  msw::helpers::add_milliseconds(time, time_.time_since_epoch());
+  MessageBoxW(
+      nullptr, message_content_.c_str(), (L"MusicThing2 Event: " + time.str()).c_str(), MB_OK | MB_ICONINFORMATION);
 }
 
 spdl::NotificationSink::NotificationSink() : win_toast_template_(make_templ()) {
@@ -44,7 +52,7 @@ spdl::NotificationSink::~NotificationSink() {
     if (is_up_) {
       is_up_ = false;
       auto* instt = WinToast::instance();
-      //for (auto id : displayed_items) {
+      // for (auto id : displayed_items) {
       //  instt->hideToast(id);
       //}
       instt->clear();
@@ -64,9 +72,11 @@ void spdl::NotificationSink::log(const spdlog::details::log_msg& msg) {
                                        .c_str())
           .c_str(),
       WinToastTemplate::FirstLine);
-  win_toast_template_.setTextField(msw::encoding::utf8_to_utf16(null_terminated.data()), WinToastTemplate::SecondLine);
-  auto * handler_inst = new wintoast::DoNothingHandler;
-  auto itm = WinToast::instance()->showToast(win_toast_template_, handler_inst);
+  auto* handler_inst =
+      new wintoast::DomenWithWinToastHandler(msw::encoding::utf8_to_utf16(null_terminated.data()), msg.time);
+  win_toast_template_.setTextField(handler_inst->message_content(), WinToastTemplate::SecondLine);
+
+  const auto itm = WinToast::instance()->showToast(win_toast_template_, handler_inst);
   if (!itm) {
     std::lock_guard<std::mutex> lck(my_awsome_mutex);
     is_up_ = false;
@@ -75,10 +85,12 @@ void spdl::NotificationSink::log(const spdlog::details::log_msg& msg) {
                 er_cd,
                 msw::windows::format_windows_error(er_cd, "WinToast::instance()->showToast"));
     is_up_ = true;
-  }
-  else {
+  } else {
     handler_inst->id = itm;
     // displayed_items.push_back(itm);
+  }
+  if (msg.level >= spdlog::level::warn) {
+    MessageBoxW(nullptr, handler_inst->message_content(), L"MusicThing2 What Now?", MB_OK | MB_ICONEXCLAMATION);
   }
 }
 

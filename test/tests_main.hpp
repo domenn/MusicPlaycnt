@@ -245,6 +245,79 @@ TEST(SongModel, manipulate_tags) {
   ASSERT_EQ("", song1.delimited_tags()) << "One remains.";
 }
 
+TEST(SongModel, similar_path_diff) {
+  msw::StringProvider sp("SongModelsimilar_path_diff");
+  auto song1 = sp.get_simple_song();
+
+  auto diff = song1.make_copy();
+  auto eq = song1.make_copy();
+  diff.set_path("absolutely not the same path.");
+  SPDLOG_TRACE("First song: {}\nDiffSong: {}\n eqSong: {}", song1, diff, eq);
+
+  SongList sl(sp.get_simple_song(), diff.make_copy(), song1.make_copy(), std::move(eq));
+  SPDLOG_TRACE("The list: {}", sl.serialize_to_str());
+  auto failing_compared = sp.get_simple_song();
+
+  auto found_it = sl.find_similar_was_song_moved_title_album_artist(diff);
+  ASSERT_TRUE(found_it.has_value());
+  ASSERT_EQ(found_it, song1);
+
+  auto my_nullopt = sl.find_similar_was_song_moved_title_album_artist(failing_compared);
+  ASSERT_FALSE(my_nullopt.has_value());
+
+  // second scenario: using the diff, we must find the first that EQs to original
+  auto found_it1 = sl.find_similar_was_song_moved_title_album_artist(song1);
+  ASSERT_TRUE(found_it1.has_value());
+  ASSERT_EQ(found_it1, diff);
+}
+
+TEST(SongModel, duplicates) {
+  msw::StringProvider sp("SongModel,duplicates");
+  auto song1 = sp.get_simple_song();
+
+  auto diff = [&]() {
+    auto r = song1.make_copy();
+    r.set_path("absolutely not the same path.");
+    return r;
+  }();
+
+  auto diff1 = [&song1]() {
+    auto r = song1.make_copy();
+    r.set_album("absolutely not the same ALBUM.");
+    return r;
+  }();
+
+  auto totally_same = song1.make_copy();
+
+  auto diff2 = [&song1]() {
+    auto r = song1.make_copy();
+    r.set_album("absolutely not the same ALBUM.");
+    r.set_album("v2 different path");
+    return r;
+  }();
+
+  // end setup; let's make list; also throw in some noise
+  SongList sl(totally_same.make_copy(),
+              sp.get_simple_song(),
+              diff.make_copy(),
+              diff1.make_copy(),
+              sp.get_simple_song(),
+              diff2.make_copy());
+
+  // Searches, tests
+  auto the_vector = sl.search_by_artist_title_or_all_four(song1);
+  ASSERT_EQ(the_vector.size(), 4);
+  ASSERT_EQ(the_vector[0], totally_same);
+  ASSERT_EQ(the_vector[1], diff);
+  ASSERT_EQ(the_vector[2], diff1);
+  ASSERT_EQ(the_vector[3], diff2);
+}
+
+// NOTE: Search DUPLICATES first. Duplicates must be multi match ...
+
+// TODO | notes - find_similar_was_song_moved_title_album_artist is two step process .... If first step goes into and
+// second fails, returns false ... and stops further search. UPDATE|soon: not true.
+
 // class CliMissingSongItems : public testing::TestWithParam<const wchar_t*> {
 //};
 //

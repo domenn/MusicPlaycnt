@@ -23,7 +23,7 @@ class Accessor {
 
   // void* data() const { return data_; }
   void replace(T_item* replacement_item);
-  void replace(T_item && replacement_item);
+  void replace(T_item&& replacement_item);
 
   //  virtual msw::model::SongWithMetadata working_item();
   //  virtual void persist();

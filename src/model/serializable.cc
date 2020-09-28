@@ -46,7 +46,7 @@ google::protobuf::io::FileOutputStream msw::Serializable::open_file_for_writing(
 google::protobuf::io::FileInputStream msw::Serializable::open_file_for_reading(const std::string& path) {
   auto [existing_file, my_errno] = cp_open_lw(path.c_str(), O_RDONLY);
   if (existing_file == -1) {
-    #ifdef _WIN32
+#ifdef _WIN32
     using thrown_e = msw::exceptions::WinApiError;
 #else
     using thrown_e = msw::exceptions::ErrorCode;

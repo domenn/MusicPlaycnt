@@ -1,9 +1,8 @@
 #pragma once
+#include "production_accessor.hpp"
 #include <src/data/accessor.hpp>
 #include <src/model/song_list.hpp>
 #include <src/model/song_with_metadata.hpp>
-
-#include "production_accessor.hpp"
 
 namespace msw::model {
 class AppConfig;

@@ -40,8 +40,8 @@ int main(int argc, char** argv) {
 std::string msw::helpers::Utilities::app_folder() { return sago::getConfigHome() + '/' + consts::TESTS_DIR; }
 
 std::string msw::StringProvider::get_str(std::string&& prefix) {
-  string right_part = std::to_string(seq++);
-  return std::move(prefix) + "_testStr__" + right_part + right_part + right_part + ".one";
+  string right_part = std::to_string(seq_++);
+  return default_prefix_ + std::move(prefix) + "_testStr__" + right_part + right_part + right_part + ".one";
 }
 
 std::tuple<std::string, std::string, std::string, std::string> msw::StringProvider::four_strings(std::string&& prefix) {

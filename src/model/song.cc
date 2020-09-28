@@ -186,7 +186,7 @@ const std::string& msw::model::Song::album() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_)->album();
 }
 
-msw::model::Song::operator msw_proto_song::Song*() const {
+msw::model::Song::operator msw_proto_song::Song *() const {
   return reinterpret_cast<msw_proto_song::Song*>(underlying_object_);
 }
 

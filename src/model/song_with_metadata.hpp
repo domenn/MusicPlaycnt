@@ -39,10 +39,10 @@ class SongWithMetadata : public Serializable {
    */
   void on_stop_or_pause(ActionType new_action_type, uint64_t action_timestamp);
 
-  uint64_t recalculate_playing_time(uint64_t action_timestamp) const ;
+  uint64_t recalculate_playing_time(uint64_t action_timestamp) const;
 };
 }  // namespace msw::model
 
 inline uint64_t msw::model::SongWithMetadata::recalculate_playing_time(const uint64_t action_timestamp) const {
-    return action_timestamp - this->action_timestamp() + playing_ms();
+  return action_timestamp - this->action_timestamp() + playing_ms();
 }

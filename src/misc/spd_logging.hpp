@@ -1,8 +1,7 @@
 #pragma once
 
-#include <memory>
-
 #include "custom_include_spdlog.hpp"
+#include <memory>
 
 namespace spdl {
 extern std::string log_pattern;
@@ -63,6 +62,5 @@ void spdlog_teardown();
  */
 // spdlog::level::level_enum level_from_str(std::string level_str);
 }  // namespace spdl
-
 
 #define L_MSW_EVTS spdl::get("Events")

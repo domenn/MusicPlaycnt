@@ -1,6 +1,6 @@
-#include "encoding.hpp"
-
 #include "../win/windows_headers.hpp"
+
+#include "encoding.hpp"
 
 namespace msw::encoding {
 std::string utf16_to_utf8(const std::wstring& utf16) {

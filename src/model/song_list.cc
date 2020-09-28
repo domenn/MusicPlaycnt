@@ -14,19 +14,66 @@ msw::model::SongList& msw::model::SongList::operator=(SongList&& other) noexcept
 }
 
 std::optional<msw::model::Song> msw::model::SongList::find_matching_song(const msw::model::Song& to_search) {
-  const auto end_it = std::end(*songs_.mutable_songs());
-  const auto beg_it = std::begin(*songs_.mutable_songs());
-  auto found = std::find_if(
-      beg_it, end_it, [&to_search](msw_proto_song::Song& protos) { return msw::model::Song(&protos) == to_search; });
-  if (found != end_it) {
+  return similarity_find_impl(to_search, [](const msw::model::Song& l_to_search, msw_proto_song::Song& l_protos) {
+    return msw::model::Song(&l_protos) == l_to_search;
+  });
+}
+
+bool msw::model::SongList::wtf(const msw::model::Song& to_search, msw_proto_song::Song& protos) {
+  const auto sim = msw::model::Song(&protos).similarity(to_search);
+  return sim.artist && sim.title && sim.album && !sim.path;
+}
+
+std::optional<msw::model::Song> msw::model::SongList::similarity_find_impl(
+    const msw::model::Song& to_search, std::function<bool(const msw::model::Song&, msw_proto_song::Song&)> searcher) {
+  const auto found = similarity_find_impl_returns_iterator(to_search, searcher, std::begin(*songs_.mutable_songs()));
+  if (found != std::end(*songs_.mutable_songs())) {
     return &*found;
   }
   return std::nullopt;
 }
 
-std::string msw::model::SongList::serialize_to_str() {
-  return serialize(songs_);
+std::optional<msw::model::Song> msw::model::SongList::find_similar_was_song_moved_title_album_artist(
+    const msw::model::Song& to_search) {
+  return similarity_find_impl(to_search, [](const msw::model::Song& l_to_search, msw_proto_song::Song& l_protos) {
+    const auto sim = msw::model::Song(&l_protos).similarity(l_to_search);
+    return sim.artist && sim.title && sim.album && !sim.path;
+  });
 }
+
+void msw::model::SongList::search_by_artist_title_or_all_four(
+    const msw::model::Song& to_search, const std::function<bool(msw::model::Song&&)>& callback_single) {
+  auto current_position = std::begin(*songs_.mutable_songs());
+  auto start_search_here = current_position;
+  while (true) {
+    current_position = similarity_find_impl_returns_iterator(
+        to_search,
+        [](const msw::model::Song& l_to_search, msw_proto_song::Song& l_protos) {
+          const auto sim = msw::model::Song(&l_protos).similarity(l_to_search);
+          return sim.artist && sim.title;
+        },
+        start_search_here);
+    if (current_position == std::end(*songs_.mutable_songs())) {
+      break;
+    }
+    if (!callback_single(&*current_position)) {
+      break;
+    }
+    start_search_here = current_position + 1;
+  }
+}
+
+std::vector<msw::model::Song> msw::model::SongList::search_by_artist_title_or_all_four(
+    const msw::model::Song& to_search) {
+  std::vector<msw::model::Song> returning;
+  search_by_artist_title_or_all_four(to_search, [&returning](msw::model::Song&& one_thingy) {
+    returning.emplace_back(std::move(one_thingy));
+    return true;
+  });
+  return returning;
+}
+
+std::string msw::model::SongList::serialize_to_str() { return serialize(songs_); }
 
 void msw::model::SongList::make_song_and_add(std::string&& a, std::string&& b, std::string&& c, std::string&& d) {
   // TODO 3 inefficient impl. ; higher number is lower priority.

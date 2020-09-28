@@ -1,15 +1,13 @@
 #include "listener.hpp"
 
-#include <spdlog/spdlog.h>
-
+#include "tray.hpp"
 #include <Res/resource.hpp>
+#include <spdlog/spdlog.h>
 #include <src/data/pointers_to_globals.hpp>
 #include <src/misc/utilities.hpp>
 #include <src/model/app_config.hpp>
 #include <src/win/encoding.hpp>
 #include <src/win/winapi_exceptions.hpp>
-
-#include "tray.hpp"
 
 VOID CALLBACK msw::tray::Listener::my_wait_or_timer_cb(_In_ PVOID lpParameter, _In_ BOOLEAN TimerOrWaitFired) {
   msw::tray::Listener* l = (msw::tray::Listener*)lpParameter;

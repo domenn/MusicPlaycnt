@@ -19,16 +19,16 @@ template <typename var_type>
 var_type ms_to_s(var_type ms) {
   return static_cast<var_type>(ms) / static_cast<var_type>(1000);
 }
-}
+}  // namespace utiltime::primitive_convs
 
 namespace msw::helpers {
 
 constexpr char D_DOT_M_DOT_Y__HMS[] = "%d.%m.%y_%H.%M.%S";
 
-template <typename chrono_thing>
-inline std::ostringstream format_some_input(const char* format, chrono_thing now_time) {
+template <typename t_os = std::ostringstream, typename chrono_thing>
+t_os format_some_input(const typename t_os::char_type* format, const chrono_thing& now_time) {
   auto itt = std::chrono::system_clock::to_time_t(now_time);
-  std::ostringstream ss;
+  t_os ss;
   std::tm stdtm{};
   FUNC_LOCALTIME(&itt, &stdtm);
   ss << std::put_time(&stdtm, format);
@@ -37,6 +37,12 @@ inline std::ostringstream format_some_input(const char* format, chrono_thing now
 
 inline std::ostringstream format_current_time_stringstream(const char* format) {
   return format_some_input(format, std::chrono::system_clock::now());
+}
+
+template <typename t_os = std::ostringstream, typename chrono_thing>
+void add_milliseconds(t_os& stream_to_change, const chrono_thing& time) {
+  stream_to_change << std::setfill(static_cast<typename t_os::char_type>('0')) << std::setw(3)
+                   << (std::chrono::duration_cast<std::chrono::milliseconds>(time) % 1000).count();
 }
 
 inline std::string format_current_time(const char* format) { return format_current_time_stringstream(format).str(); }

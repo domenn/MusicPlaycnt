@@ -30,7 +30,7 @@ void msw::model::SongWithMetadata::set_action_type(ActionType ty) {
 
 msw::model::Song msw::model::SongWithMetadata::get_song() { return proto_s_.mutable_song(); }
 
-//msw::model::Song msw::model::SongWithMetadata::get_song() const {
+// msw::model::Song msw::model::SongWithMetadata::get_song() const {
 //  auto ms = proto_s_.song();
 //  return msw::model::Song(std::addressof(ms));
 //}

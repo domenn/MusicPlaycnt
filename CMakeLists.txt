@@ -3,7 +3,6 @@ project(musicPlaycnt)
 
 set(CMAKE_CXX_STANDARD 20)
 include_directories(${CMAKE_SOURCE_DIR})
-add_definitions(-DSPDLOG_ACTIVE_LEVEL=0)
 
 # Function:                 EXCLUDE_FILES_FROM_DIR_IN_LIST
 # Description:              Exclude all files from a list under a specific directory.
@@ -77,13 +76,13 @@ add_executable(musicPlaycnt "${CMAKE_CURRENT_SOURCE_DIR}/Res/tray.rc"
     "${CMAKE_CURRENT_SOURCE_DIR}/Res/resource.hpp" ${musicPlaycntExeOnlySRC}
     )
 add_library(codeMusicPlaycnt ${musicPlaycntSRC})
+target_compile_definitions(codeMusicPlaycnt PRIVATE SPDLOG_ACTIVE_LEVEL=1)
+target_compile_definitions(musicPlaycnt PRIVATE SPDLOG_ACTIVE_LEVEL=1)
 
 if (WIN32)
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set_target_properties(musicPlaycnt PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE /ENTRY:wWinMainCRTStartup")
-    set_target_properties(musicPlaycnt PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
-    set_target_properties(musicPlaycnt PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS")
-    set_target_properties(musicPlaycnt PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:WINDOWS")
+    set_target_properties(musicPlaycnt PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE /ENTRY:wWinMainCRTStartup")
+    set_target_properties(musicPlaycnt PROPERTIES COMPILE_DEFINITIONS "_CONSOLE")
   else ()
     set_target_properties(musicPlaycnt PROPERTIES LINK_FLAGS " -municode")
   endif ()
@@ -121,6 +120,9 @@ find_lib_custom(wintoast)
 if (wintoast_LINKER)
   TARGET_COMPILE_DEFINITIONS(codeMusicPlaycnt PUBLIC DOMEN_WITH_WINTOAST)
   TARGET_SOURCES(musicPlaycnt PRIVATE Res/notification_sink_wintoast.cc)
+elseif (WIN32)
+  TARGET_COMPILE_DEFINITIONS(codeMusicPlaycnt PUBLIC DOMEN_WINDOWS_NO_TOAST)
+  TARGET_SOURCES(musicPlaycnt PRIVATE Res/warning_notification_windows_msgbox_only.cc)
 endif ()
 
 target_link_libraries(codeMusicPlaycnt PUBLIC sago::platform_folders spdlog::spdlog protobuf::libprotobuf ${wintoast_LINKER})

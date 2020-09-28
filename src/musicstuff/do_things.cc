@@ -65,6 +65,15 @@ void Handler::potentially_update_playcnt_for_current() {
         SPDLOG_LOGGER_INFO(L_MSW_EVTS, "Incrementing existing song from {} - {}", opt_found->playcount(), *opt_found);
         opt_found->increment_playcnt();
       } else {
+        auto checking_if_it_was_moved =
+            sl->find_similar_was_song_moved_title_album_artist(current_song_reader->get_song());
+        if (checking_if_it_was_moved != std::nullopt) {
+          SPDLOG_LOGGER_WARN(L_MSW_EVTS,
+                             "PlaycountEvent for song that may have been moved from {} to {}. Was it moved?\nWill "
+                             "incremend (and add new) anyway. You may want to merge.",
+                             checking_if_it_was_moved->path(),
+                             current_song_reader->get_song().path());
+        }
         assert(current_song_reader->get_song().playcount() == 0);
         SPDLOG_LOGGER_INFO(L_MSW_EVTS, "NEW SONG - {}\n", current_song_reader->get_song());
         current_song_reader->get_song().increment_playcnt();
@@ -113,7 +122,6 @@ void Handler::update_data_for_currently_stored_song() {
     default:
       return;
   }
-  // noop ... todo implement.
 }
 
 void Handler::advance() {

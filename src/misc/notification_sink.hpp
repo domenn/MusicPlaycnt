@@ -1,33 +1,39 @@
 #pragma once
 
 #include <src/misc/custom_include_spdlog.hpp>
+#include <src/misc/utiltime.hpp>
 
 #if defined(DOMEN_WITH_WINTOAST)
 #include <wintoast/wintoastlib.h>
 
 namespace spdl::wintoast {
-class DoNothingHandler : public WinToastLib::IWinToastHandler {
+class DomenWithWinToastHandler : public WinToastLib::IWinToastHandler {
+  const std::wstring message_content_;
+  const std::chrono::time_point<std::chrono::system_clock> time_;
+
  public:
+  long long id{};
 
-  long long id;
+  void toastActivated() const override;
 
-  void toastActivated() const override {
-    // SPDLOG_TRACE("Acti");
-  }
   void toastDismissed(WinToastDismissalReason state) const override {
-    // SPDLOG_TRACE("down");
+    //  SPDLOG_INFO("down {}", state);
   }
   void toastFailed() const override {
-    // SPDLOG_TRACE("Fa");
+    //  SPDLOG_INFO("Fa");
   }
   void toastActivated(int actionIndex) const override {
-    // SPDLOG_TRACE("Activa");
+    //  SPDLOG_INFO("Activa 11_ {}", actionIndex);
   }
 
-  ~DoNothingHandler() override = default;
+  ~DomenWithWinToastHandler() override = default;
+  explicit DomenWithWinToastHandler(std::wstring&& message_content,
+                                    std::chrono::time_point<std::chrono::system_clock> time)
+      : message_content_(std::move(message_content)), time_(std::move(time)) {}
+
+  [[nodiscard]] const wchar_t* message_content() const { return message_content_.c_str(); }
 };
 }  // namespace spdl::wintoast
-
 #endif  // defined(DOMEN_WITH_WINTOAST)
 
 namespace spdl {

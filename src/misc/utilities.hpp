@@ -137,6 +137,7 @@ class CmdParse {
   [[nodiscard]] bool is_listen() const;
   [[nodiscard]] ParseSongItems song_data() const;
   [[nodiscard]] std::string import_legacy_path() const;
+  [[nodiscard]] bool help() const;
 };
 }  // namespace msw::helpers
 
